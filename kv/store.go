@@ -9,7 +9,6 @@ var (
 )
 
 type Store interface {
-	Tx(bool) (Tx, error)
 	View(func(Tx) error) error
 	Update(func(Tx) error) error
 }
@@ -26,6 +25,8 @@ type Bucket interface {
 	Put(key, value []byte) error
 	Delete(key []byte) error
 	Cursor() (Cursor, error)
+	// TODO(desa): this can't actually be done transactionally with etcd
+	//GetRange(key []byte) ([]KV, error)
 }
 
 type Cursor interface {
