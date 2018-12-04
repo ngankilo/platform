@@ -5,11 +5,6 @@ import (
 	"fmt"
 )
 
-type Pair struct {
-	Key   []byte
-	Value []byte
-}
-
 type StaticCursor struct {
 	idx   int
 	pairs []Pair
@@ -62,6 +57,6 @@ func (c *StaticCursor) Next() ([]byte, []byte, error) {
 }
 
 func (c *StaticCursor) Prev() ([]byte, []byte, error) {
-	c.idx += 1
+	c.idx -= 1
 	return c.getValueAtIndex()
 }

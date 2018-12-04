@@ -20,13 +20,16 @@ type Tx interface {
 	Rollback() error
 }
 
+type Pair struct {
+	Key   []byte
+	Value []byte
+}
+
 type Bucket interface {
 	Get(key []byte) ([]byte, error)
 	Put(key, value []byte) error
 	Delete(key []byte) error
 	Cursor() (Cursor, error)
-	// TODO(desa): this can't actually be done transactionally with etcd
-	//GetRange(key []byte) ([]KV, error)
 }
 
 type Cursor interface {
