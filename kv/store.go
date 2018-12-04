@@ -16,8 +16,6 @@ type Store interface {
 type Tx interface {
 	CreateBucketIfNotExists(b []byte) error
 	Bucket(b []byte) (Bucket, error)
-	Commit() error
-	Rollback() error
 }
 
 type Pair struct {
