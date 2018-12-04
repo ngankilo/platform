@@ -33,6 +33,7 @@ func (s *KVStore) Update(fn func(kv.Tx) error) error {
 	return fn(&Tx{kv: s})
 }
 
+// TODO: make transactions actually transactional
 type Tx struct {
 	kv *KVStore
 }
