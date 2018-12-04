@@ -42,41 +42,40 @@ func TestKVStore(t *testing.T) {
 	}
 	defer close()
 
-	tx, err := s.Tx(true)
-	if err != nil {
+	if err := s.Update(func(tx kv.Tx) error {
+		if err := tx.CreateBucketIfNotExists([]byte("example")); err != nil {
+			t.Fatalf("error creating bucket: %v", err)
+		}
+
+		b, err := tx.Bucket([]byte("example"))
+		if err != nil {
+			t.Fatalf("error getting bucket: %v", err)
+		}
+
+		if err := b.Put([]byte("hello"), []byte("world")); err != nil {
+			t.Fatalf("error putting kv: %v", err)
+		}
+
+		val, err := b.Get([]byte("hello"))
+		if err != nil {
+			t.Fatalf("error getting value: %v", err)
+		}
+
+		if !bytes.Equal(val, []byte("world")) {
+			t.Fatalf("error getting value. got %v, expected world", string(val))
+		}
+
+		other, err := b.Get([]byte("world"))
+		if err != kv.ErrKeyNotFound {
+			t.Fatalf("expected key not found error got %v", err)
+		}
+
+		if other != nil {
+			t.Fatalf("expected other to be nil got %v", string(other))
+		}
+		return nil
+	}); err != nil {
 		t.Fatalf("error creating transaction: %v", err)
-	}
-	defer tx.Rollback()
-
-	if err := tx.CreateBucketIfNotExists([]byte("example")); err != nil {
-		t.Fatalf("error creating bucket: %v", err)
-	}
-
-	b, err := tx.Bucket([]byte("example"))
-	if err != nil {
-		t.Fatalf("error getting bucket: %v", err)
-	}
-
-	if err := b.Put([]byte("hello"), []byte("world")); err != nil {
-		t.Fatalf("error putting kv: %v", err)
-	}
-
-	val, err := b.Get([]byte("hello"))
-	if err != nil {
-		t.Fatalf("error getting value: %v", err)
-	}
-
-	if !bytes.Equal(val, []byte("world")) {
-		t.Fatalf("error getting value. got %v, expected world", string(val))
-	}
-
-	other, err := b.Get([]byte("world"))
-	if err != kv.ErrKeyNotFound {
-		t.Fatalf("expected key not found error got %v", err)
-	}
-
-	if other != nil {
-		t.Fatalf("expected other to be nil got %v", string(other))
 	}
 
 }
