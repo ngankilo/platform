@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
+	"strconv"
 	"time"
 	"unicode/utf8"
 
@@ -12,8 +14,10 @@ import (
 	"github.com/influxdata/flux/ast"
 	"github.com/influxdata/flux/csv"
 	"github.com/influxdata/flux/lang"
+	"github.com/influxdata/flux/parser"
 	"github.com/influxdata/flux/semantic"
 	"github.com/influxdata/flux/values"
+	"github.com/influxdata/influxql"
 	"github.com/influxdata/platform"
 	"github.com/influxdata/platform/kit/errors"
 	"github.com/influxdata/platform/query"
@@ -96,6 +100,133 @@ func (r QueryRequest) Validate() error {
 
 	return nil
 }
+
+type QueryAnalysis struct {
+	Valid  bool              `json:"valid"`
+	Errors []QueryParseError `json:"errors,omitempty"`
+}
+
+type QueryParseError struct {
+	Line      int    `json:"line"`
+	Column    int    `json:"column"`
+	Character int    `json:"character"`
+	Message   string `json:"message"`
+}
+
+func (r QueryRequest) Analyze() (*QueryAnalysis, error) {
+	switch r.Type {
+	case "flux":
+		return r.analyzeFluxQuery()
+	case "influxql":
+		return r.analyzeInfluxQLQuery()
+	}
+
+	return nil, fmt.Errorf("unknown query request type %s", r.Type)
+}
+
+func (r QueryRequest) analyzeFluxQuery() (*QueryAnalysis, error) {
+	_, err := parser.NewAST(r.Query)
+	if err == nil {
+		return &QueryAnalysis{
+			Valid: true,
+		}, nil
+	}
+
+	ms := fluxParseErrorRE.FindAllStringSubmatch(err.Error(), -1)
+	errs := make([]QueryParseError, 0, len(ms))
+	for _, m := range ms {
+		if len(m) != 5 {
+			return nil, fmt.Errorf("flux query error is not formatted as expected: got %d matches expected 5", len(m))
+		}
+		lineStr := m[1]
+		line, err := strconv.Atoi(lineStr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse line number from error mesage: %s -> %v", lineStr, err)
+		}
+		colStr := m[2]
+		col, err := strconv.Atoi(colStr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse column number from error mesage: %s -> %v", colStr, err)
+		}
+		charStr := m[3]
+		char, err := strconv.Atoi(charStr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse character number from error mesage: %s -> %v", charStr, err)
+		}
+		msg := m[4]
+
+		errs = append(errs, QueryParseError{
+			Line:      line,
+			Column:    col,
+			Character: char,
+			Message:   msg,
+		})
+
+	}
+
+	return &QueryAnalysis{
+		Errors: errs,
+	}, nil
+}
+
+var fluxParseErrorRE = regexp.MustCompile(`(\d+):(\d+) \((\d+)\): ([[:graph:] ]+)`)
+
+func (r QueryRequest) analyzeInfluxQLQuery() (*QueryAnalysis, error) {
+	_, err := influxql.ParseQuery(r.Query)
+	if err == nil {
+		return &QueryAnalysis{
+			Valid: true,
+		}, nil
+	}
+
+	ms := influxqlParseErrorRE.FindAllStringSubmatch(err.Error(), -1)
+	errs := make([]QueryParseError, 0, len(ms))
+	for _, m := range ms {
+		if len(m) != 4 {
+			return nil, fmt.Errorf("influxql query error is not formatted as expected: got %d matches expected 4", len(m))
+		}
+		msg := m[1]
+		lineStr := m[2]
+		line, err := strconv.Atoi(lineStr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse line number from error mesage: %s -> %v", lineStr, err)
+		}
+		charStr := m[3]
+		char, err := strconv.Atoi(charStr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse character number from error mesage: %s -> %v", charStr, err)
+		}
+
+		errs = append(errs, QueryParseError{
+			Line:      line,
+			Column:    columnFromCharacter(r.Query, char),
+			Character: char,
+			Message:   msg,
+		})
+	}
+
+	return &QueryAnalysis{
+		Errors: errs,
+	}, nil
+}
+
+func columnFromCharacter(q string, char int) int {
+	col := 0
+	for i, c := range q {
+		if c == '\n' {
+			col = 0
+		}
+
+		if i == char {
+			break
+		}
+		col++
+	}
+
+	return col
+}
+
+var influxqlParseErrorRE = regexp.MustCompile(`^(.+) at line (\d+), char (\d+)$`)
 
 func nowFunc(now time.Time) values.Function {
 	timeVal := values.NewTime(values.ConvertTime(now))

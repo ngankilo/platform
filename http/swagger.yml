@@ -1817,6 +1817,51 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /query/analyze:
+   post:
+    tags:
+      - Query
+    summary: analyze an influxql or flux query
+    parameters:
+      - in: header
+        name: Content-Type
+        schema:
+          type: string
+          enum:
+            - application/json
+      - in: header
+        name: Authorization
+        description: the authorization header should be in the format of `Token <key>`
+        schema:
+          type: string
+    requestBody:
+        description: flux or influxql query to analyze
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Query"
+    responses:
+        '200':
+          description: query results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyzeQueryResponse"
+        default:
+          description: internal server error
+          headers:
+            X-Influx-Error:
+              description: error string describing the problem
+              schema:
+                type: string
+            X-Influx-Reference:
+              description: reference code unique to the error type
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /query:
    get:
     tags:
@@ -4770,6 +4815,24 @@ components:
         usingView:
           type: string
           description: makes a copy of the provided view
+    AnalyzeQueryResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              line:
+                type: integer
+              column:
+                type: integer
+              character:
+                type: integer
+              message:
+                type: string
     Cell:
       type: object
       properties:
