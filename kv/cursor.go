@@ -13,6 +13,12 @@ type StaticCursor struct {
 	pairs []Pair
 }
 
+// Pair is a struct for key value pairs.
+type Pair struct {
+	Key   []byte
+	Value []byte
+}
+
 // NewStaticCursor returns an instance of a StaticCursor. It
 // destructively sorts the provided pairs to be in key ascending order.
 func NewStaticCursor(pairs []Pair) *StaticCursor {
