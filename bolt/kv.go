@@ -12,12 +12,15 @@ import (
 	"go.uber.org/zap"
 )
 
+// KVStore is a kv.Store backed by boltdb.
 type KVStore struct {
 	path   string
 	db     *bolt.DB
 	logger *zap.Logger
 }
 
+// NewKVStore returns an instance of KVStore with the file at
+// the provided path.
 func NewKVStore(path string) *KVStore {
 	return &KVStore{
 		path:   path,
@@ -25,7 +28,7 @@ func NewKVStore(path string) *KVStore {
 	}
 }
 
-// Open / create boltDB file.
+// Open creates boltDB file it doesn't exists and opens it otherwise.
 func (s *KVStore) Open(ctx context.Context) error {
 	// Ensure the required directory structure exists.
 	if err := os.MkdirAll(filepath.Dir(s.path), 0700); err != nil {
@@ -55,42 +58,36 @@ func (s *KVStore) Close() error {
 	return nil
 }
 
+// WithLogger sets the logger on the store.
 func (s *KVStore) WithLogger(l *zap.Logger) {
 	s.logger = l
 }
 
+// WithDB sets the boltdb on the store.
 func (s *KVStore) WithDB(db *bolt.DB) {
 	s.db = db
 }
 
+// View opens up a view transaction against the store.
 func (s *KVStore) View(fn func(tx kv.Tx) error) error {
 	return s.db.View(func(tx *bolt.Tx) error {
 		return fn(&Tx{tx})
 	})
 }
 
+// Update opens up an update transaction against the store.
 func (s *KVStore) Update(fn func(tx kv.Tx) error) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
 		return fn(&Tx{tx})
 	})
 }
 
-func (s *KVStore) Tx(writable bool) (kv.Tx, error) {
-	tx, err := s.db.Begin(writable)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Tx{
-		tx: tx,
-	}, nil
-
-}
-
+// Tx is a light wrapper around a boltdb transaction. It implements kv.Tx.
 type Tx struct {
 	tx *bolt.Tx
 }
 
+// CreateBucketIfNotExists creates a bucket with the provided byte slice.
 func (tx *Tx) CreateBucketIfNotExists(b []byte) error {
 	_, err := tx.tx.CreateBucketIfNotExists(b)
 	if err != nil {
@@ -99,24 +96,19 @@ func (tx *Tx) CreateBucketIfNotExists(b []byte) error {
 	return nil
 }
 
+// Bucket retrieves the bucket named b.
 func (tx *Tx) Bucket(b []byte) (kv.Bucket, error) {
 	return &Bucket{
 		bucket: tx.tx.Bucket(b),
 	}, nil
 }
 
-func (tx *Tx) Commit() error {
-	return tx.tx.Commit()
-}
-
-func (tx *Tx) Rollback() error {
-	return tx.tx.Rollback()
-}
-
+// Bucket implements kv.Bucket.
 type Bucket struct {
 	bucket *bolt.Bucket
 }
 
+// Get retrieves the value at the provided key.
 func (b *Bucket) Get(key []byte) ([]byte, error) {
 	val := b.bucket.Get(key)
 	if len(val) == 0 {
@@ -126,50 +118,71 @@ func (b *Bucket) Get(key []byte) ([]byte, error) {
 	return val, nil
 }
 
+// Put sets the value at the provided key.
 func (b *Bucket) Put(key []byte, value []byte) error {
 	return b.bucket.Put(key, value)
 }
 
+// Delete removes the provided key.
 func (b *Bucket) Delete(key []byte) error {
 	return b.bucket.Delete(key)
 }
 
+// Cursor retrieves a cursor for iterating through the entries
+// in the key value store.
 func (b *Bucket) Cursor() (kv.Cursor, error) {
 	return &Cursor{
 		cursor: b.bucket.Cursor(),
 	}, nil
 }
 
+// Cursor is a struct for iterating through the entries
+// in the key value store.
 type Cursor struct {
 	cursor *bolt.Cursor
 }
 
+// Seek seeks for the first key that matches the prefix provided.
 func (c *Cursor) Seek(prefix []byte) ([]byte, []byte, error) {
 	k, v := c.cursor.Seek(prefix)
-	// TODO(desa): what possible errors?
+	if len(v) == 0 {
+		return nil, nil, kv.ErrKeyNotFound
+	}
 	return k, v, nil
 }
 
+// First retrieves the first key value pair in the bucket.
 func (c *Cursor) First() ([]byte, []byte, error) {
 	k, v := c.cursor.First()
-	// TODO(desa): what possible errors?
+	if len(v) == 0 {
+		return nil, nil, kv.ErrKeyNotFound
+	}
 	return k, v, nil
 }
 
+// Last retrieves the last key value pair in the bucket.
 func (c *Cursor) Last() ([]byte, []byte, error) {
 	k, v := c.cursor.Last()
-	// TODO(desa): what possible errors?
+	if len(v) == 0 {
+		return nil, nil, kv.ErrKeyNotFound
+	}
 	return k, v, nil
 }
 
+// Next retrieves the next key in the bucket.
 func (c *Cursor) Next() ([]byte, []byte, error) {
 	k, v := c.cursor.Next()
-	// TODO(desa): what possible errors?
+	if len(v) == 0 {
+		return nil, nil, kv.ErrKeyNotFound
+	}
 	return k, v, nil
 }
 
+// Prev retrieves the previous key in the bucket.
 func (c *Cursor) Prev() ([]byte, []byte, error) {
 	k, v := c.cursor.Prev()
-	// TODO(desa): what possible errors?
+	if len(v) == 0 {
+		return nil, nil, kv.ErrKeyNotFound
+	}
 	return k, v, nil
 }
