@@ -101,18 +101,20 @@ func (r QueryRequest) Validate() error {
 	return nil
 }
 
+// QueryAnalysis is a structured response of errors.
 type QueryAnalysis struct {
-	Valid  bool              `json:"valid"`
-	Errors []QueryParseError `json:"errors,omitempty"`
+	Errors []queryParseError `json:"errors"`
 }
 
-type QueryParseError struct {
+type queryParseError struct {
 	Line      int    `json:"line"`
 	Column    int    `json:"column"`
 	Character int    `json:"character"`
 	Message   string `json:"message"`
 }
 
+// Analyze attempts to parse the query request and returns any errors
+// encountered in a structured way.
 func (r QueryRequest) Analyze() (*QueryAnalysis, error) {
 	switch r.Type {
 	case "flux":
@@ -125,15 +127,15 @@ func (r QueryRequest) Analyze() (*QueryAnalysis, error) {
 }
 
 func (r QueryRequest) analyzeFluxQuery() (*QueryAnalysis, error) {
+	a := &QueryAnalysis{}
 	_, err := parser.NewAST(r.Query)
 	if err == nil {
-		return &QueryAnalysis{
-			Valid: true,
-		}, nil
+		a.Errors = []queryParseError{}
+		return a, nil
 	}
 
 	ms := fluxParseErrorRE.FindAllStringSubmatch(err.Error(), -1)
-	errs := make([]QueryParseError, 0, len(ms))
+	a.Errors = make([]queryParseError, 0, len(ms))
 	for _, m := range ms {
 		if len(m) != 5 {
 			return nil, fmt.Errorf("flux query error is not formatted as expected: got %d matches expected 5", len(m))
@@ -155,7 +157,7 @@ func (r QueryRequest) analyzeFluxQuery() (*QueryAnalysis, error) {
 		}
 		msg := m[4]
 
-		errs = append(errs, QueryParseError{
+		a.Errors = append(a.Errors, queryParseError{
 			Line:      line,
 			Column:    col,
 			Character: char,
@@ -164,23 +166,21 @@ func (r QueryRequest) analyzeFluxQuery() (*QueryAnalysis, error) {
 
 	}
 
-	return &QueryAnalysis{
-		Errors: errs,
-	}, nil
+	return a, nil
 }
 
 var fluxParseErrorRE = regexp.MustCompile(`(\d+):(\d+) \((\d+)\): ([[:graph:] ]+)`)
 
 func (r QueryRequest) analyzeInfluxQLQuery() (*QueryAnalysis, error) {
+	a := &QueryAnalysis{}
 	_, err := influxql.ParseQuery(r.Query)
 	if err == nil {
-		return &QueryAnalysis{
-			Valid: true,
-		}, nil
+		a.Errors = []queryParseError{}
+		return a, nil
 	}
 
 	ms := influxqlParseErrorRE.FindAllStringSubmatch(err.Error(), -1)
-	errs := make([]QueryParseError, 0, len(ms))
+	a.Errors = make([]queryParseError, 0, len(ms))
 	for _, m := range ms {
 		if len(m) != 4 {
 			return nil, fmt.Errorf("influxql query error is not formatted as expected: got %d matches expected 4", len(m))
@@ -197,7 +197,7 @@ func (r QueryRequest) analyzeInfluxQLQuery() (*QueryAnalysis, error) {
 			return nil, fmt.Errorf("failed to parse character number from error mesage: %s -> %v", charStr, err)
 		}
 
-		errs = append(errs, QueryParseError{
+		a.Errors = append(a.Errors, queryParseError{
 			Line:      line,
 			Column:    columnFromCharacter(r.Query, char),
 			Character: char,
@@ -205,9 +205,7 @@ func (r QueryRequest) analyzeInfluxQLQuery() (*QueryAnalysis, error) {
 		})
 	}
 
-	return &QueryAnalysis{
-		Errors: errs,
-	}, nil
+	return a, nil
 }
 
 func columnFromCharacter(q string, char int) int {
