@@ -114,22 +114,26 @@ func KVGet(
 			err := s.View(func(tx kv.Tx) error {
 				b, err := tx.Bucket(tt.args.bucket)
 				if err != nil {
-					t.Fatalf("unexpected error retrieving bucket: %v", err)
+					t.Errorf("unexpected error retrieving bucket: %v", err)
+					return err
 				}
 
 				val, err := b.Get(tt.args.key)
 				if (err != nil) != (tt.wants.err != nil) {
-					t.Fatalf("expected error '%v' got '%v'", tt.wants.err, err)
+					t.Errorf("expected error '%v' got '%v'", tt.wants.err, err)
+					return err
 				}
 
 				if err != nil && tt.wants.err != nil {
 					if err.Error() != tt.wants.err.Error() {
-						t.Fatalf("expected error messages to match '%v' got '%v'", tt.wants.err, err.Error())
+						t.Errorf("expected error messages to match '%v' got '%v'", tt.wants.err, err.Error())
+						return err
 					}
 				}
 
 				if want, got := tt.wants.val, val; !bytes.Equal(want, got) {
 					t.Errorf("exptected to get value %s got %s", string(want), string(got))
+					return err
 				}
 
 				return nil
@@ -185,28 +189,33 @@ func KVPut(
 			err := s.Update(func(tx kv.Tx) error {
 				b, err := tx.Bucket(tt.args.bucket)
 				if err != nil {
-					t.Fatalf("unexpected error retrieving bucket: %v", err)
+					t.Errorf("unexpected error retrieving bucket: %v", err)
+					return err
 				}
 
 				{
 					err := b.Put(tt.args.key, tt.args.val)
 					if (err != nil) != (tt.wants.err != nil) {
-						t.Fatalf("expected error '%v' got '%v'", tt.wants.err, err)
+						t.Errorf("expected error '%v' got '%v'", tt.wants.err, err)
+						return err
 					}
 
 					if err != nil && tt.wants.err != nil {
 						if err.Error() != tt.wants.err.Error() {
-							t.Fatalf("expected error messages to match '%v' got '%v'", tt.wants.err, err.Error())
+							t.Errorf("expected error messages to match '%v' got '%v'", tt.wants.err, err.Error())
+							return err
 						}
 					}
 
 					val, err := b.Get(tt.args.key)
 					if err != nil {
-						t.Fatalf("unexpected error retrieving value: %v", err)
+						t.Errorf("unexpected error retrieving value: %v", err)
+						return err
 					}
 
 					if want, got := tt.args.val, val; !bytes.Equal(want, got) {
 						t.Errorf("exptected to get value %s got %s", string(want), string(got))
+						return err
 					}
 				}
 
@@ -266,23 +275,27 @@ func KVDelete(
 			err := s.Update(func(tx kv.Tx) error {
 				b, err := tx.Bucket(tt.args.bucket)
 				if err != nil {
-					t.Fatalf("unexpected error retrieving bucket: %v", err)
+					t.Errorf("unexpected error retrieving bucket: %v", err)
+					return err
 				}
 
 				{
 					err := b.Delete(tt.args.key)
 					if (err != nil) != (tt.wants.err != nil) {
-						t.Fatalf("expected error '%v' got '%v'", tt.wants.err, err)
+						t.Errorf("expected error '%v' got '%v'", tt.wants.err, err)
+						return err
 					}
 
 					if err != nil && tt.wants.err != nil {
 						if err.Error() != tt.wants.err.Error() {
-							t.Fatalf("expected error messages to match '%v' got '%v'", tt.wants.err, err.Error())
+							t.Errorf("expected error messages to match '%v' got '%v'", tt.wants.err, err.Error())
+							return err
 						}
 					}
 
 					if _, err := b.Get(tt.args.key); err != kv.ErrKeyNotFound {
-						t.Fatalf("expected key not found error got %v", err)
+						t.Errorf("expected key not found error got %v", err)
+						return err
 					}
 				}
 
@@ -392,87 +405,105 @@ func KVCursor(
 			err := s.View(func(tx kv.Tx) error {
 				b, err := tx.Bucket(tt.args.bucket)
 				if err != nil {
-					t.Fatalf("unexpected error retrieving bucket: %v", err)
+					t.Errorf("unexpected error retrieving bucket: %v", err)
+					return err
 				}
 
 				cur, err := b.Cursor()
 				if (err != nil) != (tt.wants.err != nil) {
-					t.Fatalf("expected error '%v' got '%v'", tt.wants.err, err)
+					t.Errorf("expected error '%v' got '%v'", tt.wants.err, err)
+					return err
 				}
 
 				if err != nil && tt.wants.err != nil {
 					if err.Error() != tt.wants.err.Error() {
-						t.Fatalf("expected error messages to match '%v' got '%v'", tt.wants.err, err.Error())
+						t.Errorf("expected error messages to match '%v' got '%v'", tt.wants.err, err.Error())
+						return err
 					}
 				}
 
 				{
 					key, val, err := cur.First()
 					if err != nil {
-						t.Fatalf("unexpected error in call to first: %v", err)
+						t.Errorf("unexpected error in call to first: %v", err)
+						return err
 					}
 					if want, got := tt.wants.first.Key, key; !bytes.Equal(want, got) {
 						t.Errorf("exptected to get key %s got %s", string(want), string(got))
+						return err
 					}
 
 					if want, got := tt.wants.first.Value, val; !bytes.Equal(want, got) {
 						t.Errorf("exptected to get value %s got %s", string(want), string(got))
+						return err
 					}
 				}
 
 				{
 					key, val, err := cur.Last()
 					if err != nil {
-						t.Fatalf("unexpected error in call to last: %v", err)
+						t.Errorf("unexpected error in call to last: %v", err)
+						return err
 					}
 					if want, got := tt.wants.last.Key, key; !bytes.Equal(want, got) {
 						t.Errorf("exptected to get key %s got %s", string(want), string(got))
+						return err
 					}
 
 					if want, got := tt.wants.last.Value, val; !bytes.Equal(want, got) {
 						t.Errorf("exptected to get value %s got %s", string(want), string(got))
+						return err
 					}
 				}
 
 				{
 					key, val, err := cur.Seek(tt.args.seek)
 					if err != nil {
-						t.Fatalf("unexpected error in call to seek: %v", err)
+						t.Errorf("unexpected error in call to seek: %v", err)
+						return err
 					}
 					if want, got := tt.wants.seek.Key, key; !bytes.Equal(want, got) {
 						t.Errorf("exptected to get key %s got %s", string(want), string(got))
+						return err
 					}
 
 					if want, got := tt.wants.seek.Value, val; !bytes.Equal(want, got) {
 						t.Errorf("exptected to get value %s got %s", string(want), string(got))
+						return err
 					}
 				}
 
 				{
 					key, val, err := cur.Next()
 					if err != nil {
-						t.Fatalf("unexpected error in call to next: %v", err)
+						t.Errorf("unexpected error in call to next: %v", err)
+						return err
 					}
 					if want, got := tt.wants.next.Key, key; !bytes.Equal(want, got) {
 						t.Errorf("exptected to get key %s got %s", string(want), string(got))
+						return err
 					}
 
 					if want, got := tt.wants.next.Value, val; !bytes.Equal(want, got) {
 						t.Errorf("exptected to get value %s got %s", string(want), string(got))
+						return err
 					}
 				}
 
 				{
 					key, val, err := cur.Prev()
 					if err != nil {
-						t.Fatalf("unexpected error in call to prev: %v", err)
+						t.Errorf("unexpected error in call to prev: %v", err)
+						return err
 					}
 					if want, got := tt.wants.prev.Key, key; !bytes.Equal(want, got) {
 						t.Errorf("exptected to get key %s got %s", string(want), string(got))
+						return err
 					}
 
 					if want, got := tt.wants.prev.Value, val; !bytes.Equal(want, got) {
 						t.Errorf("exptected to get value %s got %s", string(want), string(got))
+						return err
 					}
 				}
 
