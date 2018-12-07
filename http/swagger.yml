@@ -1842,7 +1842,7 @@ paths:
               $ref: "#/components/schemas/Query"
     responses:
         '200':
-          description: query results
+          description: query analyze results. Errors will be empty if the query is valid.
           content:
             application/json:
               schema:
