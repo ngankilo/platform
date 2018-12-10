@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"net/http/httputil"
 	"time"
 
 	"github.com/influxdata/platform"
@@ -194,9 +196,14 @@ type WriteService struct {
 	Token              string
 	Precision          string
 	InsecureSkipVerify bool
+	writeEndpoint      string
 }
 
 var _ platform.WriteService = (*WriteService)(nil)
+
+func (s *WriteService) OverrideWriteEndpoint(e string) {
+	s.writeEndpoint = e
+}
 
 func (s *WriteService) Write(ctx context.Context, orgID, bucketID platform.ID, r io.Reader) error {
 	precision := s.Precision
@@ -207,11 +214,16 @@ func (s *WriteService) Write(ctx context.Context, orgID, bucketID platform.ID, r
 	if !models.ValidPrecision(precision) {
 		return fmt.Errorf("invalid precision")
 	}
+	if s.writeEndpoint == "" {
+		s.writeEndpoint = writePath
+	}
 
-	u, err := newURL(s.Addr, writePath)
+	u, err := newURL(s.Addr, s.writeEndpoint)
 	if err != nil {
 		return err
 	}
+
+	println(u.String())
 
 	r, err = compressWithGzip(r)
 	if err != nil {
@@ -242,6 +254,14 @@ func (s *WriteService) Write(ctx context.Context, orgID, bucketID platform.ID, r
 	params.Set("bucket", string(bucket))
 	params.Set("precision", string(precision))
 	req.URL.RawQuery = params.Encode()
+
+	// JUST A DEBUG FOR ME RIGHT NOW. THIS SHOULD BE DELETED
+	dump, err := httputil.DumpRequest(req, true)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("%s", dump)
 
 	hc := newClient(u.Scheme, s.InsecureSkipVerify)
 

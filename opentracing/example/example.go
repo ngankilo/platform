@@ -14,16 +14,18 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	writeService := http.WriteService{
+		Addr:               fmt.Sprintf("http://localhost:8086"),
+		Token:              "",
+		Precision:          "n",
+		InsecureSkipVerify: false,
+	}
+	writeService.OverrideWriteEndpoint("/write")
 	tracer := opentracing.Tracer{
-		OrgID:       *id,
-		BucketID:    *id,
-		IDGenerator: snowflake.NewDefaultIDGenerator(),
-		InfluxDBWriter: http.WriteService{
-			Addr:               fmt.Sprintf("http://localhost:8086"),
-			Token:              "",
-			Precision:          "n",
-			InsecureSkipVerify: false,
-		},
+		OrgID:          *id,
+		BucketID:       *id,
+		IDGenerator:    snowflake.NewDefaultIDGenerator(),
+		InfluxDBWriter: writeService,
 	}
 
 	span := tracer.StartSpan("testtest")
