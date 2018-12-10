@@ -149,6 +149,17 @@ export default (state = INITIAL_STATE, action: Action): DataLoadersState => {
           return {...tp, active: false}
         }),
       }
+    case 'SET_PLUGIN_CONFIGURATION_STATE':
+      const configured = action.payload.configured
+      return {
+        ...state,
+        telegrafPlugins: state.telegrafPlugins.map(tp => {
+          if (tp.name === action.payload.telegrafPlugin) {
+            return {...tp, configured}
+          }
+          return {...tp}
+        }),
+      }
     case 'SET_LINE_PROTOCOL_BODY':
       return {
         ...state,

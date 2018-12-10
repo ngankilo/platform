@@ -25,6 +25,7 @@ import {
   removeConfigValue,
   removeTelegrafPlugin,
   setActiveTelegrafPlugin,
+  setPluginConfigurationState,
   createTelegrafConfigAsync,
 } from 'src/onboarding/actions/dataLoaders'
 
@@ -77,6 +78,7 @@ interface DispatchProps {
   onRemoveConfigValue: typeof removeConfigValue
   onRemoveTelegrafPlugin: typeof removeTelegrafPlugin
   onSetActiveTelegrafPlugin: typeof setActiveTelegrafPlugin
+  onSetPluginConfigurationState: typeof setPluginConfigurationState
   onSaveTelegrafConfig: typeof createTelegrafConfigAsync
 }
 
@@ -114,6 +116,7 @@ class OnboardingWizard extends PureComponent<Props> {
       onSetDataLoadersType,
       onAddTelegrafPlugin,
       onSetActiveTelegrafPlugin,
+      onSetPluginConfigurationState,
       onUpdateTelegrafPluginConfig,
       onAddConfigValue,
       onRemoveConfigValue,
@@ -147,6 +150,7 @@ class OnboardingWizard extends PureComponent<Props> {
               onUpdateTelegrafPluginConfig={onUpdateTelegrafPluginConfig}
               onRemoveTelegrafPlugin={onRemoveTelegrafPlugin}
               onSetActiveTelegrafPlugin={onSetActiveTelegrafPlugin}
+              onSetPluginConfigurationState={onSetPluginConfigurationState}
               onAddConfigValue={onAddConfigValue}
               onRemoveConfigValue={onRemoveConfigValue}
               onSaveTelegrafConfig={onSaveTelegrafConfig}
@@ -281,6 +285,7 @@ const mdtp: DispatchProps = {
   onRemoveTelegrafPlugin: removeTelegrafPlugin,
   onSetActiveTelegrafPlugin: setActiveTelegrafPlugin,
   onSaveTelegrafConfig: createTelegrafConfigAsync,
+  onSetPluginConfigurationState: setPluginConfigurationState,
 }
 
 export default connect<StateProps, DispatchProps, OwnProps>(

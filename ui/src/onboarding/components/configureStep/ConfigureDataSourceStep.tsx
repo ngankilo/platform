@@ -13,16 +13,21 @@ import {
 } from 'src/clockface'
 import ConfigureDataSourceSwitcher from 'src/onboarding/components/configureStep/ConfigureDataSourceSwitcher'
 
+// Utils
+import {getConfigFields} from 'src/onboarding/utils/pluginConfigs'
+
 // Actions
 import {setActiveTelegrafPlugin} from 'src/onboarding/actions/dataLoaders'
 import {
   updateTelegrafPluginConfig,
+  setPluginConfigurationState,
   addConfigValue,
   removeConfigValue,
   createTelegrafConfigAsync,
 } from 'src/onboarding/actions/dataLoaders'
 
 // Constants
+import {StepStatus} from 'src/clockface/constants/wizard'
 import {
   TelegrafConfigCreationSuccess,
   TelegrafConfigCreationError,
@@ -30,12 +35,18 @@ import {
 
 // Types
 import {OnboardingStepProps} from 'src/onboarding/containers/OnboardingWizard'
-import {TelegrafPlugin, DataLoaderType} from 'src/types/v2/dataLoaders'
+import {
+  TelegrafPlugin,
+  DataLoaderType,
+  ConfigurationState,
+} from 'src/types/v2/dataLoaders'
+import {validateURI} from 'src/shared/utils/validateURI'
 
 export interface OwnProps extends OnboardingStepProps {
   telegrafPlugins: TelegrafPlugin[]
   onSetActiveTelegrafPlugin: typeof setActiveTelegrafPlugin
   onUpdateTelegrafPluginConfig: typeof updateTelegrafPluginConfig
+  onSetPluginConfigurationState: typeof setPluginConfigurationState
   type: DataLoaderType
   onAddConfigValue: typeof addConfigValue
   onRemoveConfigValue: typeof removeConfigValue
@@ -77,6 +88,7 @@ class ConfigureDataSourceStep extends PureComponent<Props> {
       params: {substepID},
       setupParams,
       onUpdateTelegrafPluginConfig,
+      onSetPluginConfigurationState,
       onAddConfigValue,
       onRemoveConfigValue,
     } = this.props
@@ -89,6 +101,7 @@ class ConfigureDataSourceStep extends PureComponent<Props> {
           username={_.get(setupParams, 'username', '')}
           telegrafPlugins={telegrafPlugins}
           onUpdateTelegrafPluginConfig={onUpdateTelegrafPluginConfig}
+          onSetPluginConfigurationState={onSetPluginConfigurationState}
           onAddConfigValue={onAddConfigValue}
           onRemoveConfigValue={onRemoveConfigValue}
           dataLoaderType={type}
@@ -141,6 +154,7 @@ class ConfigureDataSourceStep extends PureComponent<Props> {
     const {
       onIncrementCurrentStepIndex,
       onSetActiveTelegrafPlugin,
+      handleSetStepStatus,
       telegrafPlugins,
       authToken,
       notify,
@@ -152,8 +166,20 @@ class ConfigureDataSourceStep extends PureComponent<Props> {
 
     const index = +substepID
 
+    await this.setPluginConfiguration()
+
     if (index >= telegrafPlugins.length - 1) {
       if (type === DataLoaderType.Streaming) {
+        const unconfigured = this.props.telegrafPlugins.find(tp => {
+          return tp.configured === ConfigurationState.Unconfigured
+        })
+
+        if (unconfigured || !telegrafPlugins.length) {
+          handleSetStepStatus(parseInt(stepID, 10), StepStatus.Incomplete)
+        } else {
+          handleSetStepStatus(parseInt(stepID, 10), StepStatus.Complete)
+        }
+
         try {
           await onSaveTelegrafConfig(authToken)
           notify(TelegrafConfigCreationSuccess)
@@ -165,7 +191,7 @@ class ConfigureDataSourceStep extends PureComponent<Props> {
       onIncrementCurrentStepIndex()
       onSetActiveTelegrafPlugin('')
     } else {
-      const name = _.get(telegrafPlugins, `${index + 1}.name`)
+      const name = _.get(telegrafPlugins, `${index + 1}.name`, '')
       onSetActiveTelegrafPlugin(name)
 
       router.push(`/onboarding/${stepID}/${index + 1}`)
@@ -190,6 +216,48 @@ class ConfigureDataSourceStep extends PureComponent<Props> {
     }
 
     router.goBack()
+  }
+
+  private setPluginConfiguration = async () => {
+    const {
+      type,
+      telegrafPlugins,
+      params: {substepID},
+      onSetPluginConfigurationState,
+    } = this.props
+
+    const index = +substepID
+
+    if (
+      type === DataLoaderType.Streaming &&
+      index <= telegrafPlugins.length - 1
+    ) {
+      const name = _.get(telegrafPlugins, `${index}.name`, '')
+      const configFields = getConfigFields(name)
+
+      if (!configFields) {
+        onSetPluginConfigurationState(name, ConfigurationState.Configured)
+      } else {
+        let invalidConfigField = false
+        const config = _.get(telegrafPlugins, `${index}.plugin.config`, {})
+
+        Object.keys(config).forEach(fieldName => {
+          const fieldValue = config[fieldName]
+
+          if (fieldName === 'url' && !validateURI(fieldValue)) {
+            invalidConfigField = true
+          } else if (fieldValue === '') {
+            invalidConfigField = true
+          }
+        })
+
+        if (invalidConfigField) {
+          onSetPluginConfigurationState(name, ConfigurationState.Unconfigured)
+        } else {
+          onSetPluginConfigurationState(name, ConfigurationState.Configured)
+        }
+      }
+    }
   }
 }
 
