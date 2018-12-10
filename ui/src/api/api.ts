@@ -76,6 +76,12 @@ export class RequiredError extends Error {
  */
 export interface Authorization {
     /**
+     * user defined description of the authorization
+     * @type {string}
+     * @memberof Authorization
+     */
+    description?: string;
+    /**
      * 
      * @type {string}
      * @memberof Authorization
@@ -2507,12 +2513,6 @@ export interface Task {
      */
     cron?: string;
     /**
-     * How long to wait before running the task
-     * @type {string}
-     * @memberof Task
-     */
-    offset?: string;
-    /**
      * A simple task repetition schedule; parsed from Flux.
      * @type {string}
      * @memberof Task
@@ -2542,6 +2542,12 @@ export interface Task {
      * @memberof Task
      */
     name: string;
+    /**
+     * How long to wait before running the task
+     * @type {string}
+     * @memberof Task
+     */
+    offset?: string;
     /**
      * The ID of the organization that owns this Task.
      * @type {string}
