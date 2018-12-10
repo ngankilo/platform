@@ -14,17 +14,22 @@ import './Label.scss'
 
 import {ErrorHandling} from 'src/shared/decorators/errors'
 
-interface Props {
+export interface LabelType {
   id: string
   text: string
-  onClick?: (id: string) => void
   colorHex: string
+  onClick?: (id: string) => void
+}
+
+interface LabelProps {
   size?: ComponentSize
 }
 
 interface State {
   colorHex: string
 }
+
+type Props = LabelType & LabelProps
 
 @ErrorHandling
 class Label extends Component<Props, State> {

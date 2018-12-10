@@ -23,7 +23,7 @@ import IndexList from './components/index_views/IndexList'
 import Context from './components/context_menu/Context'
 import FormElement from 'src/clockface/components/form_layout/FormElement'
 import DraggableResizer from 'src/clockface/components/draggable_resizer/DraggableResizer'
-import Label from 'src/clockface/components/label/Label'
+import Label, {LabelType} from 'src/clockface/components/label/Label'
 
 // Import Types
 import {
@@ -70,6 +70,7 @@ export {
   Input,
   InputType,
   Label,
+  LabelType,
   MultiSelectDropdown,
   OverlayTechnology,
   OverlayContainer,
