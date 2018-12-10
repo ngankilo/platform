@@ -4,6 +4,7 @@ exports[`Account rendering renders! 1`] = `
 <ViewTokenOverlay
   auth={
     Object {
+      "description": "im a token",
       "id": "030444b11fb10000",
       "links": Object {
         "self": "/api/v2/authorizations/030444b11fb10000",
@@ -45,6 +46,7 @@ exports[`Account rendering renders! 1`] = `
   "status": "active",
   "user": "watts",
   "userID": "030444b10a710000",
+  "description": "im a token",
   "permissions": [
     {
       "action": "create",
