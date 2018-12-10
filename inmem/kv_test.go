@@ -40,10 +40,6 @@ func initKVStore(f platformtesting.KVStoreFields, t *testing.T) (kv.Store, func(
 	s := inmem.NewKVStore()
 
 	err := s.Update(func(tx kv.Tx) error {
-		if err := tx.CreateBucketIfNotExists(f.Bucket); err != nil {
-			return err
-		}
-
 		b, err := tx.Bucket(f.Bucket)
 		if err != nil {
 			return err

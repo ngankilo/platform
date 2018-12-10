@@ -27,34 +27,50 @@ func NewKVStore() *KVStore {
 func (s *KVStore) View(fn func(kv.Tx) error) error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return fn(&Tx{kv: s})
+	return fn(&Tx{
+		kv:       s,
+		writable: false,
+	})
 }
 
 // Update opens up a transaction with a write lock.
 func (s *KVStore) Update(fn func(kv.Tx) error) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return fn(&Tx{kv: s})
+	return fn(&Tx{
+		kv:       s,
+		writable: true,
+	})
 }
 
 // Tx is an in memory transaction.
 // TODO: make transactions actually transactional
 type Tx struct {
-	kv *KVStore
+	kv       *KVStore
+	writable bool
 }
 
-// CreateBucketIfNotExists creates a btree bucket at the provided key.
-func (t *Tx) CreateBucketIfNotExists(b []byte) error {
-	// TODO(desa): what to make this value
-	t.kv.buckets[string(b)] = &Bucket{btree.New(2)}
-	return nil
+// createBucketIfNotExists creates a btree bucket at the provided key.
+func (t *Tx) createBucketIfNotExists(b []byte) (*Bucket, error) {
+	if t.writable {
+		bkt, ok := t.kv.buckets[string(b)]
+		if !ok {
+			bkt = &Bucket{btree.New(2)}
+			t.kv.buckets[string(b)] = bkt
+			return bkt, nil
+		}
+
+		return bkt, nil
+	}
+
+	return nil, errors.New("cannot create bucket: transaction is not writable")
 }
 
 // Bucket retrieves the bucket at the provided key.
 func (t *Tx) Bucket(b []byte) (kv.Bucket, error) {
 	bkt, ok := t.kv.buckets[string(b)]
 	if !ok {
-		return nil, errors.New("bucket was not created")
+		return t.createBucketIfNotExists(b)
 	}
 
 	return bkt, nil
