@@ -1,6 +1,7 @@
 package kv
 
 import (
+	"context"
 	"errors"
 )
 
@@ -22,6 +23,8 @@ type Store interface {
 // Tx is a transaction in the store.
 type Tx interface {
 	Bucket(b []byte) (Bucket, error)
+	Context() context.Context
+	WithContext(ctx context.Context)
 }
 
 // Bucket is the abstraction used to perform get/put/delete/get-many operations
