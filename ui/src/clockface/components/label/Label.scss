@@ -11,9 +11,9 @@ $label-margin: 1px;
   display: inline-block;
   margin: 0;
   font-weight: 700;
-  border-radius: $ix-radius;
   user-select: none;
   transition: background-color 0.25s ease;
+  white-space: nowrap;
 }
 
 .label--container {
@@ -33,32 +33,36 @@ $label-margin: 1px;
   }
 }
 
+/*
+  Size Modifiers
+  ------------------------------------------------------------------------------
+*/
+
+@mixin labelSizeModifier($fontSize, $padding, $height) {
+  &,
+  & + .additional-labels {
+    border-radius: $height / 2;
+    font-size: $fontSize;
+    height: $height - $ix-marg-a;
+    line-height: $height - $ix-marg-a;
+    padding: 0 ($padding + $ix-border);
+  }
+}
+
 .label--xs {
-  font-size: $form-xs-font;
-  height: $form-xs-height;
-  line-height: $form-xs-height;
-  padding: 0 $form-xs-padding;
+  @include labelSizeModifier($form-xs-font, $form-xs-padding, $form-xs-height);
 }
 
 .label--sm {
-  font-size: $form-sm-font;
-  height: $form-sm-height;
-  line-height: $form-sm-height;
-  padding: 0 $form-sm-padding;
+  @include labelSizeModifier($form-sm-font, $form-sm-padding, $form-sm-height);
 }
 
 .label--md {
-  font-size: $form-md-font;
-  height: $form-md-height;
-  line-height: $form-md-height;
-  padding: 0 $form-md-padding;
+  @include labelSizeModifier($form-md-font, $form-md-padding, $form-md-height);
 }
 
 .label--lg {
-  font-size: $form-lg-font;
-  height: $form-lg-height;
-  line-height: $form-lg-height;
-  padding: 0 $form-lg-padding;
+  @include labelSizeModifier($form-lg-font, $form-lg-padding, $form-lg-height);
 }
 
 .label--clickable {
@@ -66,3 +70,68 @@ $label-margin: 1px;
     cursor: pointer;
   }
 }
+
+/*
+  Additional Labels Indicator
+  ------------------------------------------------------------------------------
+*/
+
+.additional-labels {
+  position: relative;
+  user-select: none;
+  font-weight: 700;
+  margin: $label-margin;
+  transition: background-color 0.25s ease, color 0.25s ease;
+  background-color: rgba($g6-smoke, 0.5);
+  color: $g11-sidewalk;
+
+  &:hover {
+    cursor: pointer;
+    background-color: $g6-smoke;
+    color: $g15-platinum;
+  }
+}
+
+.label--tooltip {
+  z-index: 9999;
+  visibility: hidden;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  transition-property: all;
+}
+
+.label--tooltip-container {
+  @extend %drop-shadow;
+  opacity: 0;
+  background-color: $g0-obsidian;
+  border-radius: $radius;
+  padding: $ix-marg-c;
+  margin-top: $ix-marg-b + $ix-border;
+  transition: opacity 0.25s ease;
+  position: relative;
+
+  &:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    border: $ix-marg-b solid transparent;
+    border-bottom-color: $g0-obsidian;
+    transform: translate(-50%, -100%);
+  }
+
+  > .label {
+    margin: $label-margin;
+  }
+}
+
+.additional-labels:hover .label--tooltip {
+  visibility: visible;
+}
+
+.additional-labels:hover .label--tooltip-container {
+  opacity: 1;
+}
+

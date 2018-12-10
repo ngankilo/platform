@@ -26,7 +26,7 @@ interface LabelProps {
 }
 
 interface State {
-  colorHex: string
+  isMouseOver: boolean
 }
 
 type Props = LabelType & LabelProps
@@ -43,7 +43,7 @@ class Label extends Component<Props, State> {
     super(props)
 
     this.state = {
-      colorHex: props.colorHex,
+      isMouseOver: false,
     }
   }
 
@@ -78,16 +78,15 @@ class Label extends Component<Props, State> {
     const {onClick} = this.props
 
     if (onClick) {
-      const colorHex = `${chroma(this.props.colorHex).brighten(0.85)}`
-      this.setState({colorHex})
+      this.setState({isMouseOver: true})
     }
   }
 
   private handleMouseLeave = (): void => {
-    const {onClick, colorHex} = this.props
+    const {onClick} = this.props
 
     if (onClick) {
-      this.setState({colorHex})
+      this.setState({isMouseOver: false})
     }
   }
 
@@ -109,18 +108,26 @@ class Label extends Component<Props, State> {
   }
 
   private get style(): CSSProperties {
-    const {colorHex} = this.state
+    const {isMouseOver} = this.state
+    const {colorHex, onClick} = this.props
 
-    let textColor = Greys.Kevlar
-    const MIN_CONTRAST = 4.5
-    const contrast = chroma.contrast(colorHex, textColor)
+    let textColor
+    let backgroundColor = colorHex
+    const darkContrast = chroma.contrast(colorHex, Greys.Kevlar)
+    const lightContrast = chroma.contrast(colorHex, Greys.White)
 
-    if (contrast < MIN_CONTRAST) {
+    if (darkContrast > lightContrast) {
       textColor = Greys.Kevlar
+    } else {
+      textColor = Greys.White
+    }
+
+    if (isMouseOver && onClick) {
+      backgroundColor = `${chroma(colorHex).brighten(1)}`
     }
 
     return {
-      backgroundColor: `${colorHex}`,
+      backgroundColor: `${backgroundColor}`,
       color: `${textColor}`,
     }
   }
