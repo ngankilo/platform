@@ -1,6 +1,8 @@
 package kv
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	// ErrKeyNotFound is the error returned when the key requested is not found.
@@ -19,8 +21,9 @@ type Store interface {
 
 // Tx is a transaction in the store.
 type Tx interface {
-	CreateBucketIfNotExists(b []byte) error
 	Bucket(b []byte) (Bucket, error)
+	//Context() context.Context
+	//WithContext(ctx context.Context)
 }
 
 // Bucket is the abstraction used to perform get/put/delete/get-many operations

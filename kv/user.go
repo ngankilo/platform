@@ -31,10 +31,10 @@ func NewUserService(kv Store, idGen platform.IDGenerator) *UserService {
 
 func (c *UserService) Initialize() error {
 	return c.kv.Update(func(tx Tx) error {
-		if err := tx.CreateBucketIfNotExists([]byte(userBucket)); err != nil {
+		if _, err := tx.Bucket([]byte(userBucket)); err != nil {
 			return err
 		}
-		if err := tx.CreateBucketIfNotExists([]byte(userIndex)); err != nil {
+		if _, err := tx.Bucket([]byte(userIndex)); err != nil {
 			return err
 		}
 		return nil
