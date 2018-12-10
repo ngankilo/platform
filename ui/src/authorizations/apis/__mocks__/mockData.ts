@@ -14,6 +14,7 @@ export const authorization: Authorization = {
   status: StatusEnum.Active,
   user: 'watts',
   userID: '030444b10a710000',
+  description: 'im a token',
   permissions: [
     {action: ActionEnum.Create, resource: ResourceEnum.User},
     {action: ActionEnum.Delete, resource: ResourceEnum.User},

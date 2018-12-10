@@ -1,0 +1,69 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Account rendering renders! 1`] = `
+<ViewTokenOverlay
+  auth={
+    Object {
+      "id": "030444b11fb10000",
+      "links": Object {
+        "self": "/api/v2/authorizations/030444b11fb10000",
+        "user": "/api/v2/users/030444b10a710000",
+      },
+      "permissions": Array [
+        Object {
+          "action": "create",
+          "resource": "user",
+        },
+        Object {
+          "action": "delete",
+          "resource": "user",
+        },
+        Object {
+          "action": "write",
+          "resource": "org",
+        },
+        Object {
+          "action": "write",
+          "resource": "bucket/:id",
+        },
+      ],
+      "status": "active",
+      "token": "ohEmfY80A9UsW_cicNXgOMIPIsUvU6K9YcpTfCPQE3NV8Y6nTsCwVghczATBPyQh96CoZkOW5DIKldya6Y84KA==",
+      "user": "watts",
+      "userID": "030444b10a710000",
+    }
+  }
+>
+  <pre>
+    {
+  "links": {
+    "self": "/api/v2/authorizations/030444b11fb10000",
+    "user": "/api/v2/users/030444b10a710000"
+  },
+  "id": "030444b11fb10000",
+  "token": "ohEmfY80A9UsW_cicNXgOMIPIsUvU6K9YcpTfCPQE3NV8Y6nTsCwVghczATBPyQh96CoZkOW5DIKldya6Y84KA==",
+  "status": "active",
+  "user": "watts",
+  "userID": "030444b10a710000",
+  "permissions": [
+    {
+      "action": "create",
+      "resource": "user"
+    },
+    {
+      "action": "delete",
+      "resource": "user"
+    },
+    {
+      "action": "write",
+      "resource": "org"
+    },
+    {
+      "action": "write",
+      "resource": "bucket/:id"
+    }
+  ]
+}
+  </pre>
+</ViewTokenOverlay>
+`;
