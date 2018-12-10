@@ -1,0 +1,68 @@
+/*
+  Label Styles
+  ------------------------------------------------------------------------------
+*/
+
+@import 'src/style/modules';
+
+$label-margin: 1px;
+
+.label {
+  display: inline-block;
+  margin: 0;
+  font-weight: 700;
+  border-radius: $ix-radius;
+  user-select: none;
+  transition: background-color 0.25s ease;
+}
+
+.label--container {
+  width: 100%;
+}
+
+.label--container-margin {
+  width: calc(100% + #{$label-margin * 2});
+  position: relative;
+  left: $label-margin * -2;
+  display: flex;
+  flex-wrap: wrap;
+  padding: $label-margin;
+  
+  > .label {
+    margin: $label-margin;
+  }
+}
+
+.label--xs {
+  font-size: $form-xs-font;
+  height: $form-xs-height;
+  line-height: $form-xs-height;
+  padding: 0 $form-xs-padding;
+}
+
+.label--sm {
+  font-size: $form-sm-font;
+  height: $form-sm-height;
+  line-height: $form-sm-height;
+  padding: 0 $form-sm-padding;
+}
+
+.label--md {
+  font-size: $form-md-font;
+  height: $form-md-height;
+  line-height: $form-md-height;
+  padding: 0 $form-md-padding;
+}
+
+.label--lg {
+  font-size: $form-lg-font;
+  height: $form-lg-height;
+  line-height: $form-lg-height;
+  padding: 0 $form-lg-padding;
+}
+
+.label--clickable {
+  &, &:hover {
+    cursor: pointer;
+  }
+}
