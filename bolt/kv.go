@@ -87,19 +87,25 @@ type Tx struct {
 	tx *bolt.Tx
 }
 
-// CreateBucketIfNotExists creates a bucket with the provided byte slice.
-func (tx *Tx) CreateBucketIfNotExists(b []byte) error {
-	_, err := tx.tx.CreateBucketIfNotExists(b)
+// createBucketIfNotExists creates a bucket with the provided byte slice.
+func (tx *Tx) createBucketIfNotExists(b []byte) (*Bucket, error) {
+	bkt, err := tx.tx.CreateBucketIfNotExists(b)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return &Bucket{
+		bucket: bkt,
+	}, nil
 }
 
 // Bucket retrieves the bucket named b.
 func (tx *Tx) Bucket(b []byte) (kv.Bucket, error) {
+	bkt := tx.tx.Bucket(b)
+	if bkt == nil {
+		return tx.createBucketIfNotExists(b)
+	}
 	return &Bucket{
-		bucket: tx.tx.Bucket(b),
+		bucket: bkt,
 	}, nil
 }
 
