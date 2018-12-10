@@ -33,6 +33,45 @@ $label-margin: 1px;
   }
 }
 
+.label--clickable {
+  &, &:hover {
+    cursor: pointer;
+  }
+}
+
+.label--delete {
+  z-index: 2;
+  display: inline-block;
+  background-color: transparent;
+  position: absolute;
+  top: 0;
+  right: $ix-border + $label-margin;
+  border: 0;
+  margin: 0;
+  outline: none;
+  opacity: 0.4;
+  transition: opacity 0.25s ease;
+
+  &:hover {
+    opacity: 1;
+    cursor: pointer;
+  }
+}
+
+.label--delete-x {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60%;
+  height: $ix-border;
+  border-radius: $ix-border / 2;
+  transform: translate(-50%,-50%) rotate(45deg);
+
+  &:nth-child(2) {
+    transform: translate(-50%,-50%) rotate(-45deg);
+  }
+}
+
 /*
   Size Modifiers
   ------------------------------------------------------------------------------
@@ -46,6 +85,16 @@ $label-margin: 1px;
     height: $height - $ix-marg-a;
     line-height: $height - $ix-marg-a;
     padding: 0 ($padding + $ix-border);
+  }
+
+  .label--delete {
+    height: $height - $ix-marg-a;
+    width: $height - $ix-marg-a;
+  }
+
+  &.label--deletable {
+    position: relative;
+    padding-right: $height;
   }
 }
 
@@ -63,12 +112,6 @@ $label-margin: 1px;
 
 .label--lg {
   @include labelSizeModifier($form-lg-font, $form-lg-padding, $form-lg-height);
-}
-
-.label--clickable {
-  &, &:hover {
-    cursor: pointer;
-  }
 }
 
 /*

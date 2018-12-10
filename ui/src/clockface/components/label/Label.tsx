@@ -1,10 +1,10 @@
 // Libraries
-import React, {Component, CSSProperties} from 'react'
+import React, {Component, CSSProperties, MouseEvent} from 'react'
 import chroma from 'chroma-js'
 import classnames from 'classnames'
 
 // Types
-import {ComponentSize, Greys} from 'src/clockface/types'
+import {ComponentSize, Greys, IconFont} from 'src/clockface/types'
 
 // Components
 import LabelContainer from 'src/clockface/components/label/LabelContainer'
@@ -19,6 +19,7 @@ export interface LabelType {
   text: string
   colorHex: string
   onClick?: (id: string) => void
+  onDelete?: (id: string) => void
 }
 
 interface LabelProps {
@@ -62,6 +63,7 @@ class Label extends Component<Props, State> {
         title={this.title}
       >
         {text}
+        {this.deleteButton}
       </label>
     )
   }
@@ -71,6 +73,15 @@ class Label extends Component<Props, State> {
 
     if (onClick) {
       onClick(id)
+    }
+  }
+
+  private handleDelete = (e: MouseEvent<HTMLButtonElement>): void => {
+    e.stopPropagation()
+    const {id, onDelete} = this.props
+
+    if (onDelete) {
+      onDelete(id)
     }
   }
 
@@ -91,11 +102,12 @@ class Label extends Component<Props, State> {
   }
 
   private get className(): string {
-    const {size, onClick} = this.props
+    const {size, onClick, onDelete} = this.props
 
     return classnames('label', {
       [`label--${size}`]: size,
       'label--clickable': onClick,
+      'label--deletable': onDelete,
     })
   }
 
@@ -107,20 +119,30 @@ class Label extends Component<Props, State> {
     }
   }
 
+  private get deleteButton(): JSX.Element {
+    const {onDelete} = this.props
+
+    if (onDelete) {
+      return (
+        <button className="label--delete" onClick={this.handleDelete}>
+          <div
+            className="label--delete-x"
+            style={{backgroundColor: this.textColor}}
+          />
+          <div
+            className="label--delete-x"
+            style={{backgroundColor: this.textColor}}
+          />
+        </button>
+      )
+    }
+  }
+
   private get style(): CSSProperties {
     const {isMouseOver} = this.state
     const {colorHex, onClick} = this.props
 
-    let textColor
     let backgroundColor = colorHex
-    const darkContrast = chroma.contrast(colorHex, Greys.Kevlar)
-    const lightContrast = chroma.contrast(colorHex, Greys.White)
-
-    if (darkContrast > lightContrast) {
-      textColor = Greys.Kevlar
-    } else {
-      textColor = Greys.White
-    }
 
     if (isMouseOver && onClick) {
       backgroundColor = `${chroma(colorHex).brighten(1)}`
@@ -128,7 +150,20 @@ class Label extends Component<Props, State> {
 
     return {
       backgroundColor: `${backgroundColor}`,
-      color: `${textColor}`,
+      color: this.textColor,
+    }
+  }
+
+  private get textColor(): string {
+    const {colorHex} = this.props
+
+    const darkContrast = chroma.contrast(colorHex, Greys.Kevlar)
+    const lightContrast = chroma.contrast(colorHex, Greys.White)
+
+    if (darkContrast > lightContrast) {
+      return Greys.Kevlar
+    } else {
+      return Greys.White
     }
   }
 
