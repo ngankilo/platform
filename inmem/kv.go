@@ -2,6 +2,7 @@ package inmem
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"sync"
@@ -30,6 +31,7 @@ func (s *KVStore) View(fn func(kv.Tx) error) error {
 	return fn(&Tx{
 		kv:       s,
 		writable: false,
+		ctx:      context.Background(),
 	})
 }
 
@@ -40,6 +42,7 @@ func (s *KVStore) Update(fn func(kv.Tx) error) error {
 	return fn(&Tx{
 		kv:       s,
 		writable: true,
+		ctx:      context.Background(),
 	})
 }
 
@@ -48,6 +51,17 @@ func (s *KVStore) Update(fn func(kv.Tx) error) error {
 type Tx struct {
 	kv       *KVStore
 	writable bool
+	ctx      context.Context
+}
+
+// Context returns the context for the transaction.
+func (t *Tx) Context() context.Context {
+	return t.ctx
+}
+
+// WithContext sets the context for the transaction.
+func (t *Tx) WithContext(ctx context.Context) {
+	t.ctx = ctx
 }
 
 // createBucketIfNotExists creates a btree bucket at the provided key.
