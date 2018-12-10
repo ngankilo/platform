@@ -9,17 +9,23 @@ import {Authorization} from 'src/api'
 
 interface Props {
   auth: Authorization
-  onClickDescription?: (authID: string) => void
+  onClickDescription: (authID: string) => void
 }
 
 export default class TokenRow extends PureComponent<Props> {
   public render() {
-    const {description, status} = this.props.auth
+    const {description, status, id} = this.props.auth
 
     return (
       <IndexList.Row>
         <IndexList.Cell>
-          <span onClick={this.handleClickDescription}>{description}</span>
+          <a
+            href="#"
+            onClick={this.handleClickDescription}
+            data-test={`token-description-${id}`}
+          >
+            {description}
+          </a>
         </IndexList.Cell>
         <IndexList.Cell>{status}</IndexList.Cell>
       </IndexList.Row>
@@ -27,7 +33,7 @@ export default class TokenRow extends PureComponent<Props> {
   }
 
   private handleClickDescription = () => {
-    // const {onClickDescription, auth} = this.props
-    // onClickDescription(auth.id)
+    const {onClickDescription, auth} = this.props
+    onClickDescription(auth.id)
   }
 }

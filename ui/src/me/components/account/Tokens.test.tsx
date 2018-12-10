@@ -46,11 +46,19 @@ describe('Account', () => {
     })
   })
 
-  // describe('user interaction', () => {
-  //   describe('clicking the token description', () => {
-  //     it('opens the ViewTokenModal', () => {
-  //       const {wrapper} = setup()
-  //     })
-  //   })
-  // })
+  describe('user interaction', () => {
+    describe('clicking the token description', () => {
+      it('opens the ViewTokenModal', () => {
+        const description = wrapper.find({
+          'data-test': `token-description-${authorization.id}`,
+        })
+        description.simulate('click')
+        wrapper.update()
+
+        const modal = wrapper.find(ViewTokenModal)
+
+        expect(modal.exists()).toBe(true)
+      })
+    })
+  })
 })

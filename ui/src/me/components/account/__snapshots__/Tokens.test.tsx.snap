@@ -299,6 +299,7 @@ exports[`Account rendering renders! 1`] = `
                                 }
                               }
                               key="030444b11fb10000"
+                              onClickDescription={[Function]}
                             >
                               <IndexListRow
                                 disabled={false}
@@ -317,6 +318,7 @@ exports[`Account rendering renders! 1`] = `
                                         className="index-list--cell"
                                       >
                                         <span
+                                          data-test="token-description-030444b11fb10000"
                                           onClick={[Function]}
                                         >
                                           im a token
@@ -375,6 +377,7 @@ exports[`Account rendering renders! 1`] = `
                                 }
                               }
                               key="1"
+                              onClickDescription={[Function]}
                             >
                               <IndexListRow
                                 disabled={false}
@@ -393,6 +396,7 @@ exports[`Account rendering renders! 1`] = `
                                         className="index-list--cell"
                                       >
                                         <span
+                                          data-test="token-description-1"
                                           onClick={[Function]}
                                         >
                                           im a token

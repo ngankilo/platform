@@ -12,6 +12,7 @@ import TokenRow from 'src/me/components/account/TokenRow'
 
 // Types
 import {Authorization} from 'src/api'
+import ViewTokenOverlay from './ViewTokenOverlay'
 
 interface Props {
   auths: Authorization[]
@@ -19,6 +20,7 @@ interface Props {
 
 interface State {
   isTokenOverlayVisible: boolean
+  authInView: Authorization
 }
 
 export default class TokenList extends PureComponent<Props, State> {
@@ -26,6 +28,7 @@ export default class TokenList extends PureComponent<Props, State> {
     super(props)
     this.state = {
       isTokenOverlayVisible: false,
+      authInView: null,
     }
   }
 
@@ -42,15 +45,26 @@ export default class TokenList extends PureComponent<Props, State> {
           </IndexList.Header>
           <IndexList.Body emptyState={this.emptyState} columnCount={2}>
             {auths.map(a => {
-              return <TokenRow key={a.id} auth={a} />
+              return (
+                <TokenRow
+                  key={a.id}
+                  auth={a}
+                  onClickDescription={this.handleClickDescription}
+                />
+              )
             })}
           </IndexList.Body>
         </IndexList>
         <OverlayTechnology visible={isTokenOverlayVisible}>
-          <div>hai im an overlay</div>
+          <ViewTokenOverlay auth={this.props.auths[0]} />
         </OverlayTechnology>
       </>
     )
+  }
+
+  private handleClickDescription = (authID: string): void => {
+    const authInView = this.props.auths.find(a => a.id === authID)
+    this.setState({isTokenOverlayVisible: true, authInView})
   }
 
   private get emptyState(): JSX.Element {
