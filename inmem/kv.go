@@ -3,7 +3,6 @@ package inmem
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"sync"
 
@@ -65,19 +64,25 @@ func (t *Tx) WithContext(ctx context.Context) {
 }
 
 // createBucketIfNotExists creates a btree bucket at the provided key.
-func (t *Tx) createBucketIfNotExists(b []byte) (*Bucket, error) {
+func (t *Tx) createBucketIfNotExists(b []byte) (kv.Bucket, error) {
 	if t.writable {
 		bkt, ok := t.kv.buckets[string(b)]
 		if !ok {
 			bkt = &Bucket{btree.New(2)}
 			t.kv.buckets[string(b)] = bkt
-			return bkt, nil
+			return &bucket{
+				Bucket:   bkt,
+				writable: t.writable,
+			}, nil
 		}
 
-		return bkt, nil
+		return &bucket{
+			Bucket:   bkt,
+			writable: t.writable,
+		}, nil
 	}
 
-	return nil, errors.New("cannot create bucket: transaction is not writable")
+	return nil, kv.ErrTxNotWritable
 }
 
 // Bucket retrieves the bucket at the provided key.
@@ -87,7 +92,10 @@ func (t *Tx) Bucket(b []byte) (kv.Bucket, error) {
 		return t.createBucketIfNotExists(b)
 	}
 
-	return bkt, nil
+	return &bucket{
+		Bucket:   bkt,
+		writable: t.writable,
+	}, nil
 }
 
 // Bucket is a btree that implements kv.Bucket.
@@ -95,11 +103,35 @@ type Bucket struct {
 	btree *btree.BTree
 }
 
+type bucket struct {
+	kv.Bucket
+	writable bool
+}
+
+// Put wraps the put method of a kv bucket and ensures that the
+// bucket is writable.
+func (b *bucket) Put(key, value []byte) error {
+	if b.writable {
+		return b.Bucket.Put(key, value)
+	}
+	return kv.ErrTxNotWritable
+}
+
+// Delete wraps the delete method of a kv bucket and ensures that the
+// bucket is writable.
+func (b *bucket) Delete(key []byte) error {
+	if b.writable {
+		return b.Bucket.Delete(key)
+	}
+	return kv.ErrTxNotWritable
+}
+
 type item struct {
 	key   []byte
 	value []byte
 }
 
+// Less is used to implement btree.Item.
 func (i *item) Less(b btree.Item) bool {
 	j, ok := b.(*item)
 	if !ok {

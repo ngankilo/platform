@@ -8,6 +8,9 @@ import (
 var (
 	// ErrKeyNotFound is the error returned when the key requested is not found.
 	ErrKeyNotFound = errors.New("key not found")
+	// ErrTxNotWritable is the error returned when an mutable operation is called during
+	// a non-writable transaction.
+	ErrTxNotWritable = errors.New("transaction is not writable")
 )
 
 // Store is an interface for a generic key value store. It is modeled after

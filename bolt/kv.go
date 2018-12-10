@@ -143,12 +143,20 @@ func (b *Bucket) Get(key []byte) ([]byte, error) {
 
 // Put sets the value at the provided key.
 func (b *Bucket) Put(key []byte, value []byte) error {
-	return b.bucket.Put(key, value)
+	err := b.bucket.Put(key, value)
+	if err == bolt.ErrTxNotWritable {
+		return kv.ErrTxNotWritable
+	}
+	return err
 }
 
 // Delete removes the provided key.
 func (b *Bucket) Delete(key []byte) error {
-	return b.bucket.Delete(key)
+	err := b.bucket.Delete(key)
+	if err == bolt.ErrTxNotWritable {
+		return kv.ErrTxNotWritable
+	}
+	return err
 }
 
 // Cursor retrieves a cursor for iterating through the entries
