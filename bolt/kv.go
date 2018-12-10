@@ -71,20 +71,37 @@ func (s *KVStore) WithDB(db *bolt.DB) {
 // View opens up a view transaction against the store.
 func (s *KVStore) View(fn func(tx kv.Tx) error) error {
 	return s.db.View(func(tx *bolt.Tx) error {
-		return fn(&Tx{tx})
+		return fn(&Tx{
+			tx:  tx,
+			ctx: context.Background(),
+		})
 	})
 }
 
 // Update opens up an update transaction against the store.
 func (s *KVStore) Update(fn func(tx kv.Tx) error) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
-		return fn(&Tx{tx})
+		return fn(&Tx{
+			tx:  tx,
+			ctx: context.Background(),
+		})
 	})
 }
 
 // Tx is a light wrapper around a boltdb transaction. It implements kv.Tx.
 type Tx struct {
-	tx *bolt.Tx
+	tx  *bolt.Tx
+	ctx context.Context
+}
+
+// Context returns the context for the transaction.
+func (tx *Tx) Context() context.Context {
+	return tx.ctx
+}
+
+// WithContext sets the context for the transaction.
+func (tx *Tx) WithContext(ctx context.Context) {
+	tx.ctx = ctx
 }
 
 // createBucketIfNotExists creates a bucket with the provided byte slice.
