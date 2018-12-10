@@ -22,17 +22,17 @@ type Store interface {
 // Tx is a transaction in the store.
 type Tx interface {
 	Bucket(b []byte) (Bucket, error)
-	//Context() context.Context
-	//WithContext(ctx context.Context)
 }
 
 // Bucket is the abstraction used to perform get/put/delete/get-many operations
 // in a key value store.
 type Bucket interface {
 	Get(key []byte) ([]byte, error)
-	Put(key, value []byte) error
-	Delete(key []byte) error
 	Cursor() (Cursor, error)
+	// Put should error if the transaction it was called in is not writable.
+	Put(key, value []byte) error
+	// Delete should error if the transaction it was called in is not writable.
+	Delete(key []byte) error
 }
 
 // Cursor is an abstraction for iterating/ranging through data. A concrete implementation
