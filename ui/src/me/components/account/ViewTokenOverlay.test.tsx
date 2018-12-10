@@ -6,7 +6,7 @@ import {mount} from 'enzyme'
 import ViewTokenOverlay from 'src/me/components/account/ViewTokenOverlay'
 
 // Fixtures
-import {authorization as auth} from 'src/authorizations/apis/__mocks__/mockData'
+import {authorization as auth} from 'src/authorizations/apis/__mocks__/data'
 
 const setup = (override?) => {
   const props = {

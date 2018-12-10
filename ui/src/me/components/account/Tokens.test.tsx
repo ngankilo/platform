@@ -5,6 +5,10 @@ import {mount} from 'enzyme'
 // Components
 import {Tokens} from 'src/me/components/account/Tokens'
 import TokenRow from 'src/me/components/account/TokenRow'
+import ViewTokenModal from 'src/me/components/account/ViewTokenOverlay'
+
+// Fixtures
+import {authorization} from 'src/authorizations/apis/__mocks__/data'
 
 jest.mock('src/authorizations/apis')
 
