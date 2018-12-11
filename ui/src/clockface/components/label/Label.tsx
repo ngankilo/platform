@@ -4,7 +4,7 @@ import chroma from 'chroma-js'
 import classnames from 'classnames'
 
 // Types
-import {ComponentSize, Greys, IconFont} from 'src/clockface/types'
+import {ComponentSize, Greys} from 'src/clockface/types'
 
 // Components
 import LabelContainer from 'src/clockface/components/label/LabelContainer'
@@ -17,6 +17,7 @@ import {ErrorHandling} from 'src/shared/decorators/errors'
 export interface LabelType {
   id: string
   text: string
+  description: string
   colorHex: string
   onClick?: (id: string) => void
   onDelete?: (id: string) => void
@@ -68,7 +69,8 @@ class Label extends Component<Props, State> {
     )
   }
 
-  private handleClick = (): void => {
+  private handleClick = (e: MouseEvent<HTMLLabelElement>): void => {
+    e.stopPropagation()
     const {id, onClick} = this.props
 
     if (onClick) {
