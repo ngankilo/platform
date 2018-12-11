@@ -155,7 +155,7 @@ func TestMacroService_handleGetMacro(t *testing.T) {
 			},
 			wants: wants{
 				statusCode:  404,
-				contentType: "",
+				contentType: "application/json",
 				body:        ``,
 			},
 		},
@@ -266,7 +266,7 @@ func TestMacroService_handlePostMacro(t *testing.T) {
 			},
 			wants: wants{
 				statusCode:  422,
-				contentType: "",
+				contentType: "application/json",
 				body:        "",
 			},
 		},
@@ -285,7 +285,7 @@ func TestMacroService_handlePostMacro(t *testing.T) {
 			},
 			wants: wants{
 				statusCode:  400,
-				contentType: "",
+				contentType: "application/json",
 				body:        "",
 			},
 		},
@@ -377,7 +377,7 @@ func TestMacroService_handlePatchMacro(t *testing.T) {
 			},
 			wants: wants{
 				statusCode:  422,
-				contentType: "",
+				contentType: "application/json",
 				body:        ``,
 			},
 		},

@@ -34,15 +34,18 @@ paths:
   /:
     get:
       summary: Map of all top level routes available
+      operationId: getRoutes
       responses:
         default:
           description: All routes
           content:
             application/json:
+              example: {"authorizations":"/api/v2/authorizations","buckets":"/api/v2/buckets","dashboards":"/api/v2/dashboards","external":{"statusFeed":"https://www.influxdata.com/feed/json"},"macros":"/api/v2/macros","me":"/api/v2/me","orgs":"/api/v2/orgs","query":{"ast":"/api/v2/query/ast","plan":"/api/v2/query/plan","self":"/api/v2/query","spec":"/api/v2/query/spec","suggestions":"/api/v2/query/suggestions"},"setup":"/api/v2/setup","signin":"/api/v2/signin","signout":"/api/v2/signout","sources":"/api/v2/sources","system":{"debug":"/debug/pprof","health":"/health","metrics":"/metrics"},"tasks":"/api/v2/tasks","telegrafs":"/api/v2/telegrafs","users":"/api/v2/users","views":"/api/v2/views","write":"/api/v2/write"}
               schema:
                 $ref: "#/components/schemas/Routes"
   /setup:
     get:
+      operationId: setupGet
       tags:
         - Setup
       summary: check if database has default user, org, bucket created, returns true if not.
@@ -55,6 +58,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/IsOnboarding"
     post:
+      operationId: setupPost
       tags:
         - Setup
       summary: post onboarding request, to setup initial user, org and bucket
@@ -63,6 +67,7 @@ paths:
         required: true
         content:
           application/json:
+            example: {"username":"user1", "password":"hunter2", "org":"org1", "bucket":"bucket1"}
             schema:
               $ref: "#/components/schemas/OnboardingRequest"
       responses:
@@ -70,6 +75,7 @@ paths:
           description: Created default user, bucket, org
           content:
             application/json:
+              example: {"user":{"links":{"log":"/api/v2/users/0000000000000064/log","self":"/api/v2/users/0000000000000064"},"id":"0000000000000064","name":"user1"},"bucket":{"links":{"log":"/api/v2/buckets/0000000000000064/log","org":"/api/v2/orgs/0000000000000064","self":"/api/v2/buckets/0000000000000064"},"id":"0000000000000064","organizationID":"0000000000000064","organization":"org1","name":"bucket1","retentionRules":[]},"org":{"links":{"buckets":"/api/v2/buckets?org=org1","dashboards":"/api/v2/dashboards?org=org1","log":"/api/v2/orgs/0000000000000064/log","members":"/api/v2/orgs/0000000000000064/members","self":"/api/v2/orgs/0000000000000064","tasks":"/api/v2/tasks?org=org1"},"id":"0000000000000064","name":"org1"},"auth":{"links":{"self":"/api/v2/authorizations/0000000000000064","user":"/api/v2/users/0000000000000064"},"id":"0000000000000064","token":"secret","status":"active","user":"user1","userID":"0000000000000064","permissions":[{"action":"create","resource":"user"},{"action":"delete","resource":"user"},{"action":"write","resource":"org"},{"action":"write","resource":"bucket/0000000000000064"}]}}
               schema:
                 $ref: "#/components/schemas/OnboardingResponse"
   /telegrafs:
@@ -719,6 +725,9 @@ paths:
                 $ref: "#/components/schemas/Error"
   /health:
     get:
+      servers:
+        - url: /
+      operationId: healthGet
       tags:
         - Health
       summary: Get the health of an instance
@@ -727,6 +736,7 @@ paths:
           description: the instance is healthy
           content:
             application/json:
+              example: {"message":"influxdb", "status":"healthy"}
               schema:
                 $ref: "#/components/schemas/Health"
         default:
@@ -1373,12 +1383,15 @@ paths:
     post:
       tags:
         - Dashboards
+      operationId: dashboardsPost
+      x-precondition-operations: [setupPost]
       summary: Create a dashboard
       parameters:
           - in: query
             name: org
             description: specifies the organization of the resource
             required: true
+            example: "0000000000000064"
             schema:
               type: string
       requestBody:
@@ -2053,6 +2066,7 @@ paths:
           description: Suggestions for next functions in call chain
           content:
             application/json:
+              example: {"funcs":[{"name":"_highestOrLowest","params":{"_sortLimit":"function","by":"array","columns":"array","n":"invalid","reducer":"function","tables":"object"}},{"name":"_sortLimit","params":{"columns":"array","desc":"bool","n":"int","tables":"object"}},{"name":"aggregateWindow","params":{"columns":"array","every":"duration","fn":"function","tables":"object","timeDst":"string","timeSrc":"string"}},{"name":"bool","params":{"v":"invalid"}},{"name":"bottom","params":{"columns":"array","n":"invalid","tables":"invalid"}},{"name":"buckets","params":{}},{"name":"count","params":{"columns":"array","tables":"object"}},{"name":"cov","params":{"on":"array","pearsonr":"bool","x":"invalid","y":"invalid"}},{"name":"covariance","params":{"columns":"array","pearsonr":"bool","tables":"object","valueDst":"string"}},{"name":"cumulativeSum","params":{"columns":"array","tables":"object"}},{"name":"databases","params":{}},{"name":"derivative","params":{"columns":"array","nonNegative":"bool","tables":"object","timeColumn":"string","unit":"duration"}},{"name":"difference","params":{"columns":"array","nonNegative":"bool","tables":"object"}},{"name":"distinct","params":{"column":"string","tables":"object"}},{"name":"drop","params":{"columns":"array","fn":"function","tables":"object"}},{"name":"duplicate","params":{"as":"string","column":"string","tables":"object"}},{"name":"duration","params":{"v":"invalid"}},{"name":"filter","params":{"fn":"function","tables":"object"}},{"name":"first","params":{"column":"string","tables":"object"}},{"name":"float","params":{"v":"invalid"}},{"name":"from","params":{"bucket":"string","bucketID":"string"}},{"name":"fromCSV","params":{"csv":"string","file":"string"}},{"name":"fromGenerator","params":{"count":"int","fn":"function","start":"time","stop":"time"}},{"name":"fromInfluxJSON","params":{"file":"string","json":"string"}},{"name":"fromRows","params":{"bucket":"string","bucketID":"string"}},{"name":"fromSQL","params":{"dataSourceName":"string","driverName":"string","query":"string"}},{"name":"group","params":{"all":"bool","by":"array","except":"array","none":"bool","tables":"object"}},{"name":"highestAverage","params":{"by":"invalid","columns":"array","n":"invalid","tables":"invalid"}},{"name":"highestCurrent","params":{"by":"invalid","columns":"array","n":"invalid","tables":"invalid"}},{"name":"highestMax","params":{"by":"invalid","columns":"array","n":"invalid","tables":"invalid"}},{"name":"histogram","params":{"bins":"array","column":"string","columns":"array","normalize":"bool","tables":"object","upperBoundColumn":"string"}},{"name":"histogramQuantile","params":{"countColumn":"string","minValue":"float","quantile":"float","tables":"object","upperBoundColumn":"string","valueColumn":"string"}},{"name":"increase","params":{"columns":"array","tables":"object"}},{"name":"int","params":{"v":"invalid"}},{"name":"integral","params":{"columns":"array","tables":"object","timeColumn":"string","unit":"duration"}},{"name":"join","params":{"method":"string","on":"array","tables":"object"}},{"name":"keep","params":{"columns":"array","fn":"function","tables":"object"}},{"name":"keyValues","params":{"fn":"function","keyColumns":"array","tables":"object"}},{"name":"keys","params":{"except":"array","tables":"object"}},{"name":"last","params":{"column":"string","tables":"object"}},{"name":"limit","params":{"n":"int","offset":"int","tables":"object"}},{"name":"linearBins","params":{"count":"int","infinity":"bool","start":"float","width":"float"}},{"name":"logarithmicBins","params":{"count":"int","factor":"float","infinity":"bool","start":"float"}},{"name":"lowestAverage","params":{"by":"invalid","columns":"array","n":"invalid","tables":"invalid"}},{"name":"lowestCurrent","params":{"by":"invalid","columns":"array","n":"invalid","tables":"invalid"}},{"name":"lowestMin","params":{"by":"invalid","columns":"array","n":"invalid","tables":"invalid"}},{"name":"map","params":{"fn":"function","mergeKey":"bool","tables":"object"}},{"name":"max","params":{"column":"string","tables":"object"}},{"name":"mean","params":{"columns":"array","tables":"object"}},{"name":"median","params":{"compression":"float","method":"string","tables":"object"}},{"name":"min","params":{"column":"string","tables":"object"}},{"name":"pearsonr","params":{"on":"invalid","x":"invalid","y":"invalid"}},{"name":"percentile","params":{"column":"string","compression":"float","method":"string","percentile":"float","tables":"object"}},{"name":"pivot","params":{"columnKey":"array","rowKey":"array","tables":"object","valueColumn":"string"}},{"name":"range","params":{"start":"invalid","startColumn":"string","stop":"invalid","stopColumn":"string","tables":"object","timeColumn":"string"}},{"name":"rename","params":{"columns":"object","fn":"function","tables":"object"}},{"name":"sample","params":{"column":"string","n":"int","pos":"int","tables":"object"}},{"name":"set","params":{"key":"string","tables":"object","value":"string"}},{"name":"shift","params":{"columns":"array","shift":"duration","tables":"object"}},{"name":"skew","params":{"columns":"array","tables":"object"}},{"name":"sort","params":{"columns":"array","desc":"bool","tables":"object"}},{"name":"spread","params":{"columns":"array","tables":"object"}},{"name":"stateCount","params":{"fn":"function","label":"string","tables":"object"}},{"name":"stateDuration","params":{"fn":"function","label":"string","tables":"object","unit":"duration"}},{"name":"stateTracking","params":{"countLabel":"string","durationLabel":"string","durationUnit":"duration","fn":"function","tables":"object","timeColumn":"string"}},{"name":"stddev","params":{"columns":"array","tables":"object"}},{"name":"string","params":{"v":"invalid"}},{"name":"sum","params":{"columns":"array","tables":"object"}},{"name":"systemTime","params":{}},{"name":"time","params":{"v":"invalid"}},{"name":"to","params":{"bucket":"string","bucketID":"string","fieldFn":"function","host":"string","measurementColumn":"string","org":"string","orgID":"string","tables":"object","tagColumns":"array","timeColumn":"string","token":"string"}},{"name":"toBool","params":{"tables":"object"}},{"name":"toDuration","params":{"tables":"object"}},{"name":"toFloat","params":{"tables":"object"}},{"name":"toHTTP","params":{"method":"string","name":"string","tables":"object","tagColumns":"array","timeColumn":"string","timeout":"duration","url":"string","valueColumns":"array"}},{"name":"toInt","params":{"tables":"object"}},{"name":"toKafka","params":{"balancer":"string","brokers":"array","name":"string","nameColumn":"string","tables":"object","tagColumns":"array","timeColumn":"string","topic":"string","valueColumns":"array"}},{"name":"toString","params":{"tables":"object"}},{"name":"toTime","params":{"tables":"object"}},{"name":"toUInt","params":{"tables":"object"}},{"name":"top","params":{"columns":"array","n":"invalid","tables":"invalid"}},{"name":"uint","params":{"v":"invalid"}},{"name":"union","params":{"tables":"array"}},{"name":"unique","params":{"column":"string","tables":"object"}},{"name":"window","params":{"createEmpty":"bool","every":"duration","period":"duration","round":"duration","start":"invalid","startColumn":"string","stopColumn":"string","tables":"object","timeColumn":"string"}},{"name":"yield","params":{"name":"string","tables":"object"}}]}
               schema:
                 $ref: "#/components/schemas/FluxSuggestions"
         default:
@@ -2089,6 +2103,8 @@ paths:
     get:
       tags:
         - Authorizations
+      operationId: authorizationsGet
+      x-precondition-operations: [setupPost]
       summary: List all authorizations
       parameters:
         - in: query
@@ -2096,16 +2112,19 @@ paths:
           schema:
             type: string
           description: filter authorizations belonging to a user id
+          example: "0000000000000064"
         - in: query
           name: user
           schema:
             type: string
           description: filter authorizations belonging to a user name
+          example: "user1"
       responses:
         '200':
           description: A list of authorizations
           content:
             application/json:
+              example: {"links":{"self":"/api/v2/authorizations"},"auths":[{"links":{"self":"/api/v2/authorizations/0000000000000064","user":"/api/v2/users/0000000000000064"},"id":"0000000000000064","token":"secret","status":"active","user":"user1","userID":"0000000000000064","permissions":[{"action":"create","resource":"user"},{"action":"delete","resource":"user"},{"action":"write","resource":"org"},{"action":"write","resource":"bucket/0000000000000064"}]}]}
               schema:
                 $ref: "#/components/schemas/Authorizations"
         default:
@@ -2117,12 +2136,15 @@ paths:
     post:
       tags:
         - Authorizations
+      operationId: authorizationsPost
+      x-precondition-operations: [usersPost,orgsPost,bucketsPost]
       summary: Create an authorization
       requestBody:
         description: authorization to create
         required: true
         content:
           application/json:
+            example: {"userID":"0000000000000064","status":"active","permissions":[{"action":"create","resource":"user"},{"action":"delete","resource":"user"},{"action":"write","resource":"org"},{"action":"write","resource":"bucket/0000000000000064"}]}
             schema:
               $ref: "#/components/schemas/Authorization"
       responses:
@@ -2130,6 +2152,7 @@ paths:
           description: authorization created
           content:
             application/json:
+              example: {"links":{"self":"/api/v2/authorizations/0000000000000064","user":"/api/v2/users/0000000000000064"},"id":"0000000000000064","token":"secret","status":"active","userID":"0000000000000064","permissions":[{"action":"create","resource":"user"},{"action":"delete","resource":"user"},{"action":"write","resource":"org"},{"action":"write","resource":"bucket/0000000000000064"}]}
               schema:
                 $ref: "#/components/schemas/Authorization"
         default:
@@ -2142,6 +2165,8 @@ paths:
     get:
       tags:
         - Authorizations
+      operationId: authorizationGet
+      x-precondition-operations: [usersPost,orgsPost,bucketsPost,authorizationsPost]
       summary: Retrieve an authorization
       parameters:
         - in: path
@@ -2150,11 +2175,13 @@ paths:
             type: string
           required: true
           description: ID of authorization to get
+          example: "0000000000000064"
       responses:
         '200':
           description: authorization details
           content:
             application/json:
+              example: {"links":{"self":"/api/v2/authorizations/0000000000000064","user":"/api/v2/users/0000000000000064"},"id":"0000000000000064","token":"secret","status":"active","user":"user1","userID":"0000000000000064","permissions":[{"action":"create","resource":"user"},{"action":"delete","resource":"user"},{"action":"write","resource":"org"},{"action":"write","resource":"bucket/0000000000000064"}]}
               schema:
                 $ref: "#/components/schemas/Authorization"
         default:
@@ -2166,12 +2193,15 @@ paths:
     patch:
       tags:
         - Authorizations
+      operationId: authorizationPatch
+      x-precondition-operations: [usersPost,orgsPost,bucketsPost,authorizationsPost]
       summary: update authorization to be active or inactive. requests using an inactive authorization will be rejected.
       requestBody:
         description: authorization to update to apply
         required: true
         content:
           application/json:
+            example: {"status": "inactive"}
             schema:
               $ref: "#/components/schemas/Authorization"
       parameters:
@@ -2181,11 +2211,13 @@ paths:
             type: string
           required: true
           description: ID of authorization to update
+          example: "0000000000000064"
       responses:
         '200':
           description: the active or inactie authorization
           content:
             application/json:
+              example: {"links":{"self":"/api/v2/authorizations/0000000000000064","user":"/api/v2/users/0000000000000064"},"id":"0000000000000064","token":"secret","status":"inactive","user":"user1","userID":"0000000000000064","permissions":[{"action":"create","resource":"user"},{"action":"delete","resource":"user"},{"action":"write","resource":"org"},{"action":"write","resource":"bucket/0000000000000064"}]}
               schema:
                 $ref: "#/components/schemas/Authorization"
         default:
@@ -2197,6 +2229,8 @@ paths:
     delete:
       tags:
         - Authorizations
+      operationId: authorizationDelete
+      x-precondition-operations: [usersPost,orgsPost,bucketsPost,authorizationsPost]
       summary: Delete a authorization
       parameters:
         - in: path
@@ -2205,6 +2239,7 @@ paths:
             type: string
           required: true
           description: ID of authorization to delete
+          example: "0000000000000064"
       responses:
         '204':
           description: authorization deleted
@@ -2387,11 +2422,14 @@ paths:
       tags:
         - Buckets
       summary: List all buckets
+      operationId: bucketsGet
+      x-precondition-operations: [orgsPost,bucketsPost]
       parameters:
           - in: query
             name: org
             description: specifies the organization of the resource
             required: true
+            example: "0000000000000064"
             schema:
               type: string
       responses:
@@ -2399,6 +2437,7 @@ paths:
           description: a list of buckets
           content:
             application/json:
+              example: {"links":{"self":"/api/v2/buckets"},"buckets":[{"links":{"log":"/api/v2/buckets/0000000000000064/log","org":"/api/v2/orgs/0000000000000064","self":"/api/v2/buckets/0000000000000064"},"id":"0000000000000064","organizationID":"0000000000000064","organization":"org1","name":"bucket1","retentionRules":[{"type":"expire","everySeconds":3600}]}]}
               schema:
                 $ref: "#/components/schemas/Buckets"
         default:
@@ -2411,18 +2450,14 @@ paths:
       tags:
         - Buckets
       summary: Create a bucket
-      parameters:
-          - in: query
-            name: org
-            description: specifies the organization of the resource
-            required: true
-            schema:
-              type: string
+      operationId: bucketsPost
+      x-precondition-operations: [orgsPost]
       requestBody:
         description: bucket to create
         required: true
         content:
           application/json:
+            example: {"organizationID":"0000000000000064","organization":"org1","name":"bucket1","retentionRules":[{"type":"expire","everySeconds":3600}]}
             schema:
               $ref: "#/components/schemas/Bucket"
       responses:
@@ -2430,6 +2465,7 @@ paths:
           description: Bucket created
           content:
             application/json:
+              example: {"links":{"log":"/api/v2/buckets/0000000000000064/log","org":"/api/v2/orgs/0000000000000064","self":"/api/v2/buckets/0000000000000064"},"id":"0000000000000064","organizationID":"0000000000000064","organization":"org1","name":"bucket1","retentionRules":[{"type":"expire","everySeconds":3600}]}
               schema:
                 $ref: "#/components/schemas/Bucket"
         default:
@@ -2443,18 +2479,22 @@ paths:
       tags:
         - Buckets
       summary: Retrieve a bucket
+      operationId: bucketGet
+      x-precondition-operations: [orgsPost,bucketsPost]
       parameters:
         - in: path
           name: bucketID
           schema:
             type: string
           required: true
+          example: "0000000000000064"
           description: ID of bucket to get
       responses:
         '200':
           description: bucket details
           content:
             application/json:
+              example: {"links":{"log":"/api/v2/buckets/0000000000000064/log","org":"/api/v2/orgs/0000000000000064","self":"/api/v2/buckets/0000000000000064"},"id":"0000000000000064","organizationID":"0000000000000064","organization":"org1","name":"bucket1","retentionRules":[{"type":"expire","everySeconds":3600}]}
               schema:
                 $ref: "#/components/schemas/Bucket"
         default:
@@ -2467,11 +2507,14 @@ paths:
       tags:
         - Buckets
       summary: Update a bucket
+      operationId: bucketPatch
+      x-precondition-operations: [orgsPost,bucketsPost]
       requestBody:
         description: bucket update to apply
         required: true
         content:
           application/json:
+            example: {"name":"newbucketname","retentionRules":[{"type":"expire","everySeconds":86400}]}
             schema:
               $ref: "#/components/schemas/Bucket"
       parameters:
@@ -2480,12 +2523,14 @@ paths:
           schema:
             type: string
           required: true
+          example: "0000000000000064"
           description: ID of bucket to update
       responses:
         '200':
           description: An updated bucket
           content:
             application/json:
+              example: {"links":{"log":"/api/v2/buckets/0000000000000064/log","org":"/api/v2/orgs/0000000000000064","self":"/api/v2/buckets/0000000000000064"},"id":"0000000000000064","organizationID":"0000000000000064","organization":"org1","name":"newbucketname","retentionRules":[{"type":"expire","everySeconds":86400}]}
               schema:
                 $ref: "#/components/schemas/Bucket"
         default:
@@ -2697,11 +2742,14 @@ paths:
       tags:
         - Organizations
       summary: List all organizations
+      operationId: orgsGet
+      x-precondition-operations: [orgsPost]
       responses:
         '200':
           description: A list of organizations
           content:
             application/json:
+              example: {"links":{"self":"/api/v2/orgs"},"orgs":[{"links":{"buckets":"/api/v2/buckets?org=org1","dashboards":"/api/v2/dashboards?org=org1","log":"/api/v2/orgs/0000000000000064/log","members":"/api/v2/orgs/0000000000000064/members","self":"/api/v2/orgs/0000000000000064","tasks":"/api/v2/tasks?org=org1"},"id":"0000000000000064","name":"org1"}]}
               schema:
                 $ref: "#/components/schemas/Organizations"
         default:
@@ -2714,11 +2762,14 @@ paths:
       tags:
         - Organizations
       summary: Create an organization
+      operationId: orgsPost
+      x-precondition-operations: []
       requestBody:
         description: organization to create
         required: true
         content:
           application/json:
+            example: {"name":"org1"}
             schema:
               $ref: "#/components/schemas/Organization"
       responses:
@@ -2726,6 +2777,7 @@ paths:
           description: organization created
           content:
             application/json:
+              example: {"links":{"buckets":"/api/v2/buckets?org=org1","dashboards":"/api/v2/dashboards?org=org1","log":"/api/v2/orgs/0000000000000064/log","members":"/api/v2/orgs/0000000000000064/members","self":"/api/v2/orgs/0000000000000064","tasks":"/api/v2/tasks?org=org1"},"id":"0000000000000064","name":"org1"}
               schema:
                 $ref: "#/components/schemas/Organization"
         default:
@@ -2739,13 +2791,16 @@ paths:
       tags:
         - Organizations
       summary: Retrieve an organization
+      operationId: orgGet
+      x-precondition-operations: [orgsPost]
       parameters:
         - in: path
           name: orgID
           schema:
             type: string
           required: true
-          description: ID of organization to get
+          example: "0000000000000064"
+          description: ID of organization
       responses:
         '200':
           description: organization details
@@ -2763,6 +2818,8 @@ paths:
       tags:
         - Organizations
       summary: Update an organization
+      operationId: orgPatch
+      x-precondition-operations: [orgsPost]
       requestBody:
         description: organization update to apply
         required: true
@@ -2776,12 +2833,14 @@ paths:
           schema:
             type: string
           required: true
+          example: "0000000000000064"
           description: ID of organization to get
       responses:
         '200':
           description: organization updated
           content:
             application/json:
+              example: {"links":{"buckets":"/api/v2/buckets?org=org1","dashboards":"/api/v2/dashboards?org=org1","log":"/api/v2/orgs/0000000000000064/log","members":"/api/v2/orgs/0000000000000064/members","self":"/api/v2/orgs/0000000000000064","tasks":"/api/v2/tasks?org=org1"},"id":"0000000000000064","name":"neworgname"}
               schema:
                 $ref: "#/components/schemas/Organization"
         default:
@@ -2940,6 +2999,7 @@ paths:
           description: a list of all secret keys
           content:
             application/json:
+              example: {"links":{"buckets":"/api/v2/buckets?org=org1","dashboards":"/api/v2/dashboards?org=org1","log":"/api/v2/orgs/0000000000000064/log","members":"/api/v2/orgs/0000000000000064/members","self":"/api/v2/orgs/0000000000000064","tasks":"/api/v2/tasks?org=org1"},"id":"0000000000000064","name":"org1"}
               schema:
                 $ref: "#/components/schemas/SecretKeys"
         default:
@@ -2965,6 +3025,7 @@ paths:
         required: true
         content:
           application/json:
+            example: {"name":"neworgname"}
             schema:
               $ref: "#/components/schemas/Secrets"
       responses:
@@ -3506,6 +3567,7 @@ paths:
           description: currently authenticated user
           content:
             application/json:
+              example: {"links":{"log":"/api/v2/users/0000000000000064/log","self":"/api/v2/users/0000000000000064"},"id":"0000000000000064","name":"user1"}
               schema:
                 $ref: "#/components/schemas/User"
         default:
@@ -3714,11 +3776,14 @@ paths:
       tags:
         - Users
       summary: List all users
+      operationId: usersGet
+      x-precondition-operations: [usersPost]
       responses:
         '200':
           description: a list of users
           content:
             application/json:
+              example: {"links":{"self":"/api/v2/users"},"users":[{"links":{"log":"/api/v2/users/0000000000000064/log","self":"/api/v2/users/0000000000000064"},"id":"0000000000000064","name":"user1"}]}
               schema:
                 $ref: "#/components/schemas/Users"
         default:
@@ -3730,12 +3795,15 @@ paths:
     post:
       tags:
         - Users
+      operationId: usersPost
+      x-precondition-operations: []
       summary: Create a user
       requestBody:
         description: user to create
         required: true
         content:
           application/json:
+            example: {"name":"user1"}
             schema:
               $ref: "#/components/schemas/User"
       responses:
@@ -3743,6 +3811,7 @@ paths:
           description: user created
           content:
             application/json:
+              example: {"links":{"log":"/api/v2/users/0000000000000064/log","self":"/api/v2/users/0000000000000064"},"id":"0000000000000064","name":"user1"}
               schema:
                 $ref: "#/components/schemas/UserResponse"
         default:
@@ -3756,18 +3825,22 @@ paths:
       tags:
         - Users
       summary: Retrieve a user
+      operationId: userGet
+      x-precondition-operations: [usersPost]
       parameters:
         - in: path
           name: userID
           schema:
             type: string
           required: true
+          example: "0000000000000064"
           description: ID of user to get
       responses:
         '200':
           description: user details
           content:
             application/json:
+              example: {"links":{"log":"/api/v2/users/0000000000000064/log","self":"/api/v2/users/0000000000000064"},"id":"0000000000000064","name":"user1"}
               schema:
                 $ref: "#/components/schemas/UserResponse"
         default:
@@ -3780,11 +3853,14 @@ paths:
       tags:
         - Users
       summary: Update a user
+      operationId: userPatch
+      x-precondition-operations: [usersPost]
       requestBody:
         description: user update to apply
         required: true
         content:
           application/json:
+            example: {"name":"newname"}
             schema:
               $ref: "#/components/schemas/User"
       parameters:
@@ -3793,12 +3869,14 @@ paths:
           schema:
             type: string
           required: true
+          example: "0000000000000064"
           description: ID of user to update
       responses:
         '200':
           description: user updated
           content:
             application/json:
+              example: {"links":{"log":"/api/v2/users/0000000000000064/log","self":"/api/v2/users/0000000000000064"},"id":"0000000000000064","name":"newname"}
               schema:
                 $ref: "#/components/schemas/User"
         default:
@@ -3811,12 +3889,15 @@ paths:
       tags:
         - Users
       summary: deletes a user
+      operationId: userPatch
+      x-precondition-operations: [usersPost]
       parameters:
         - in: path
           name: userID
           schema:
             type: string
           required: true
+          example: "0000000000000064"
           description: ID of user to delete
       responses:
         '204':
@@ -3834,18 +3915,22 @@ paths:
       summary: Update password
       security:
         - basicAuth: []
+      operationId: userPasswordPut
+      x-precondition-operations: [usersPost]
       parameters:
         - in: path
           name: userID
           schema:
             type: string
           required: true
+          example: "0000000000000064"
           description: ID of the user
       requestBody:
         description: new password
         required: true
         content:
           application/json:
+            example: {"password":"newpassword"}
             schema:
               $ref: "#/components/schemas/PasswordResetBody"
       responses:
@@ -4424,12 +4509,14 @@ components:
       type: object
       properties:
         funcs:
-          type: object
-          properties:
-            name:
-              type: string
-            params:
-              type: object
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              params:
+                type: object
     FluxLinks:
       type: object
       properties:
