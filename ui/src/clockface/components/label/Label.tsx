@@ -55,7 +55,7 @@ class Label extends Component<Props, State> {
     this.validateColorHex()
 
     return (
-      <label
+      <div
         className={this.className}
         onClick={this.handleClick}
         onMouseEnter={this.handleMouseEnter}
@@ -63,14 +63,14 @@ class Label extends Component<Props, State> {
         style={this.style}
         title={this.title}
       >
-        {text}
+        <label>{text}</label>
         {this.deleteButton}
-      </label>
+      </div>
     )
   }
 
-  private handleClick = (e: MouseEvent<HTMLLabelElement>): void => {
-    e.stopPropagation()
+  private handleClick = (e: MouseEvent<HTMLDivElement>): void => {
+    e.preventDefault()
     const {id, onClick} = this.props
 
     if (onClick) {
@@ -79,7 +79,6 @@ class Label extends Component<Props, State> {
   }
 
   private handleDelete = (e: MouseEvent<HTMLButtonElement>): void => {
-    e.stopPropagation()
     const {id, onDelete} = this.props
 
     if (onDelete) {
@@ -126,7 +125,11 @@ class Label extends Component<Props, State> {
 
     if (onDelete) {
       return (
-        <button className="label--delete" onClick={this.handleDelete}>
+        <button
+          className="label--delete"
+          onClick={this.handleDelete}
+          type="button"
+        >
           <div
             className="label--delete-x"
             style={{backgroundColor: this.textColor}}

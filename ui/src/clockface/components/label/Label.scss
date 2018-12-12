@@ -10,10 +10,15 @@ $label-margin: 1px;
 .label {
   display: inline-block;
   margin: 0;
-  font-weight: 700;
   user-select: none;
   transition: background-color 0.25s ease;
   white-space: nowrap;
+  
+  > label {
+    cursor: inherit;
+    font-weight: 700;
+    margin: 0;
+  }
 }
 
 .label--container {

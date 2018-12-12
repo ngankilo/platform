@@ -1,43 +1,64 @@
 // Libraries
 import React, {Component, ChangeEvent, KeyboardEvent} from 'react'
-import classnames from 'classnames'
 import _ from 'lodash'
-
-// Types
-// import {ComponentSize} from 'src/clockface/types'
 
 // Components
 import Input from 'src/clockface/components/inputs/Input'
+import Button from 'src/clockface/components/Button'
 import Label, {LabelType} from 'src/clockface/components/label/Label'
 import LabelContainer from 'src/clockface/components/label/LabelContainer'
+import LabelSelectorMenu from 'src/clockface/components/label/LabelSelectorMenu'
+import {ClickOutside} from 'src/shared/components/ClickOutside'
+
+// Types
+import {ComponentSize} from 'src/clockface/types'
 
 // Styles
 import './LabelSelector.scss'
 
 import {ErrorHandling} from 'src/shared/decorators/errors'
 
+enum ArrowDirection {
+  Up = -1,
+  Down = 1,
+}
+
 interface Props {
   selectedLabels: LabelType[]
-  checkAgainst: LabelType[]
+  allLabels: LabelType[]
   onAddLabel: (label: LabelType) => void
   onRemoveLabel: (label: LabelType) => void
+  onRemoveAllLabels: () => void
   resourceType: string
+  inputSize?: ComponentSize
 }
 
 interface State {
   filterValue: string
+  filteredLabels: LabelType[]
   isSuggesting: boolean
   highlightedID: string
 }
 
 @ErrorHandling
 class LabelSelector extends Component<Props, State> {
+  public static defaultProps: Partial<Props> = {
+    inputSize: ComponentSize.Small,
+  }
+
   constructor(props: Props) {
     super(props)
+
+    const initialFilteredLabels = _.differenceBy(
+      props.allLabels,
+      props.selectedLabels,
+      label => label.text
+    )
 
     this.state = {
       highlightedID: null,
       filterValue: '',
+      filteredLabels: initialFilteredLabels,
       isSuggesting: false,
     }
   }
@@ -48,17 +69,22 @@ class LabelSelector extends Component<Props, State> {
 
     return (
       <div className="label-selector">
-        <div className="label-selector--input">
-          <Input
-            placeholder={`Add labels to ${resourceType}`}
-            value={filterValue}
-            onFocus={this.handleStartSuggesting}
-            onKeyDown={this.handleKeyDown}
-            onChange={this.handleInputChange}
-          />
-          {this.suggestionMenu}
+        <ClickOutside onClickOutside={this.handleStopSuggesting}>
+          <div className="label-selector--input">
+            <Input
+              placeholder={`Add labels to ${resourceType}`}
+              value={filterValue}
+              onFocus={this.handleStartSuggesting}
+              onKeyDown={this.handleKeyDown}
+              onChange={this.handleInputChange}
+            />
+            {this.suggestionMenu}
+          </div>
+        </ClickOutside>
+        <div className="label-selector--bottom">
+          {this.selectedLabels}
+          {this.clearSelectedButton}
         </div>
-        {this.selectedLabels}
       </div>
     )
   }
@@ -82,89 +108,110 @@ class LabelSelector extends Component<Props, State> {
       )
     }
 
-    return <p>{`This ${resourceType} has no labels`}</p>
-  }
-
-  private get availableLabels(): LabelType[] {
-    const {selectedLabels, checkAgainst} = this.props
-
-    return _.difference(checkAgainst, [...selectedLabels])
-  }
-
-  private get filteredLabels(): LabelType[] {
-    const {filterValue} = this.state
-
-    return _.filter(this.props.checkAgainst, l => {
-      const itemText = _.lowerCase(l.text)
-
-      return itemText.includes(_.lowerCase(filterValue))
-    })
+    return (
+      <div className="label-selector--none-selected">{`${_.upperFirst(
+        resourceType
+      )} has no labels`}</div>
+    )
   }
 
   private get suggestionMenu(): JSX.Element {
-    const {isSuggesting} = this.state
+    const {allLabels, selectedLabels} = this.props
+    const {isSuggesting, highlightedID} = this.state
+
+    const allLabelsUsed = allLabels.length === selectedLabels.length
 
     if (isSuggesting) {
       return (
-        <div>
-          {this.filteredLabels.length ? (
-            this.filteredLabels.map(item => {
-              return (
-                <div
-                  key={item.id}
-                  className={this.suggestionItemClass(item.id)}
-                  onMouseOver={this.handleSetHighlightedID(item.id)}
-                  onClick={this.handleSuggestionClick(item.id)}
-                >
-                  {item.text}
-                </div>
-              )
-            })
-          ) : (
-            <div>No matching labels</div>
-          )}
-        </div>
+        <LabelSelectorMenu
+          allLabelsUsed={allLabelsUsed}
+          filteredLabels={this.availableLabels}
+          highlightItemID={highlightedID}
+          onItemClick={this.handleAddLabel}
+          onItemHighlight={this.handleItemHighlight}
+        />
       )
     }
   }
 
-  private suggestionItemClass = (labelID: string): string => {
-    const {highlightedID} = this.state
+  private handleAddLabel = (labelID: string): void => {
+    const {onAddLabel, allLabels} = this.props
 
-    return classnames('suggest-item', {highlight: labelID === highlightedID})
+    const label = allLabels.find(label => label.id === labelID)
+
+    onAddLabel(label)
+    this.handleStopSuggesting()
   }
 
-  private handleSetHighlightedID = (highlightedID: string) => (): void => {
+  private handleItemHighlight = (highlightedID: string): void => {
     this.setState({highlightedID})
   }
 
   private handleStartSuggesting = () => {
-    const highlightedID = this.props.checkAgainst[0].id
-    this.setState({isSuggesting: true, highlightedID})
+    const {availableLabels} = this
+
+    if (_.isEmpty(availableLabels)) {
+      return this.setState({
+        isSuggesting: true,
+        highlightedID: null,
+        filterValue: '',
+      })
+    }
+
+    const highlightedID = this.availableLabels[0].id
+    this.setState({isSuggesting: true, highlightedID, filterValue: ''})
   }
 
   private handleStopSuggesting = () => {
-    this.setState({isSuggesting: false, highlightedID: null})
+    const {allLabels: filteredLabels} = this.props
+
+    this.setState({isSuggesting: false, filterValue: '', filteredLabels})
   }
 
   private handleInputChange = (e: ChangeEvent<HTMLInputElement>): void => {
-    const {highlightedID} = this.state
+    let highlightedID = this.state.highlightedID
+    const {allLabels, selectedLabels} = this.props
     const filterValue = e.target.value
 
-    const filteredItems = _.filter(this.availableLabels, label => {
-      const itemText = _.lowerCase(label.text)
+    const availableLabels = _.differenceBy(
+      allLabels,
+      selectedLabels,
+      l => l.text
+    )
 
-      return itemText.includes(_.lowerCase(filterValue))
+    const filteredLabels = availableLabels.filter(label => {
+      const filterChars = _.lowerCase(filterValue)
+        .replace(/\s/g, '')
+        .split('')
+      const labelChars = _.lowerCase(label.text)
+        .replace(/\s/g, '')
+        .split('')
+
+      const overlap = _.difference(filterChars, labelChars)
+
+      if (overlap.length) {
+        return false
+      }
+
+      return true
     })
 
-    if (filteredItems.find(item => item.id === highlightedID)) {
-      this.setState({filterValue})
-    } else if (filteredItems.length) {
-      const highlightedID = filteredItems[0].id
-      this.setState({filterValue, highlightedID})
-    } else {
-      this.setState({filterValue})
+    const highlightedIDAvailable = filteredLabels.find(
+      al => al.id === highlightedID
+    )
+
+    if (!highlightedIDAvailable && filteredLabels.length) {
+      highlightedID = filteredLabels[0].id
     }
+
+    this.setState({filterValue, filteredLabels, highlightedID})
+  }
+
+  private get availableLabels(): LabelType[] {
+    const {selectedLabels} = this.props
+    const {filteredLabels} = this.state
+
+    return _.differenceBy(filteredLabels, selectedLabels, label => label.text)
   }
 
   private handleDelete = (labelID: string): void => {
@@ -175,26 +222,63 @@ class LabelSelector extends Component<Props, State> {
     onRemoveLabel(label)
   }
 
-  private handleSuggestionClick = (labelID: string) => (): void => {
-    const {onAddLabel} = this.props
+  private handleHighlightAdjacentItem = (direction: ArrowDirection): void => {
+    const {highlightedID} = this.state
+    const {availableLabels} = this
 
-    const label = this.props.checkAgainst.find(label => label.id === labelID)
+    if (!availableLabels.length || !highlightedID) {
+      return null
+    }
 
-    onAddLabel(label)
-    this.handleStopSuggesting()
+    const highlightedIndex = _.findIndex(
+      availableLabels,
+      label => label.id === highlightedID
+    )
+
+    const adjacentIndex = Math.min(
+      Math.max(highlightedIndex + direction, 0),
+      availableLabels.length - 1
+    )
+
+    const adjacentID = availableLabels[adjacentIndex].id
+
+    this.setState({highlightedID: adjacentID})
   }
 
   private handleKeyDown = (e: KeyboardEvent<HTMLInputElement>): void => {
-    if (e.key === 'Escape') {
-      console.log('escape!')
-      this.handleStopSuggesting()
-    } else if (e.key === 'Enter') {
-      const label = this.props.checkAgainst.find(
-        label => label.id === this.state.highlightedID
-      )
+    const {highlightedID} = this.state
 
-      this.props.onAddLabel(label)
+    switch (e.key) {
+      case 'Escape':
+        e.currentTarget.blur()
+        return this.handleStopSuggesting()
+      case 'Enter':
+        e.currentTarget.blur()
+        return this.handleAddLabel(highlightedID)
+      case 'ArrowUp':
+        return this.handleHighlightAdjacentItem(ArrowDirection.Up)
+      case 'ArrowDown':
+        return this.handleHighlightAdjacentItem(ArrowDirection.Down)
+      default:
+        break
     }
+  }
+
+  private get clearSelectedButton(): JSX.Element {
+    const {selectedLabels, onRemoveAllLabels} = this.props
+
+    if (_.isEmpty(selectedLabels)) {
+      return
+    }
+
+    return (
+      <Button
+        text="Remove All Labels"
+        size={ComponentSize.ExtraSmall}
+        customClass="label-selector--remove-all"
+        onClick={onRemoveAllLabels}
+      />
+    )
   }
 }
 
