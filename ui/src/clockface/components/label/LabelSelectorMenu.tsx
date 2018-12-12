@@ -3,6 +3,7 @@ import React, {Component} from 'react'
 import _ from 'lodash'
 
 // Components
+import FancyScrollbar from 'src/shared/components/fancy_scrollbar/FancyScrollbar'
 import {LabelType} from 'src/clockface/components/label/Label'
 import LabelSelectorMenuItem from 'src/clockface/components/label/LabelSelectorMenuItem'
 
@@ -19,7 +20,13 @@ interface Props {
 @ErrorHandling
 class LabelSelectorMenu extends Component<Props> {
   public render() {
-    return <div className="label-selector--menu">{this.menuItems}</div>
+    return (
+      <div className="label-selector--menu-container">
+        <FancyScrollbar autoHide={false} autoHeight={true} maxHeight={250}>
+          <div className="label-selector--menu">{this.menuItems}</div>
+        </FancyScrollbar>
+      </div>
+    )
   }
 
   private get menuItems(): JSX.Element[] | JSX.Element {

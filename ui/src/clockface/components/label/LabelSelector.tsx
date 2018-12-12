@@ -102,6 +102,7 @@ class LabelSelector extends Component<Props, State> {
               id={label.id}
               colorHex={label.colorHex}
               onDelete={this.handleDelete}
+              description={label.description}
             />
           ))}
         </LabelContainer>

@@ -113,15 +113,17 @@ class Label extends Component<Props, State> {
   }
 
   private get title(): string {
-    const {onClick, text} = this.props
+    const {onClick, text, description} = this.props
 
     if (onClick) {
       return `Click to see all resources with the "${text}" label`
     }
+
+    return `${description}`
   }
 
   private get deleteButton(): JSX.Element {
-    const {onDelete} = this.props
+    const {onDelete, text} = this.props
 
     if (onDelete) {
       return (
@@ -129,6 +131,7 @@ class Label extends Component<Props, State> {
           className="label--delete"
           onClick={this.handleDelete}
           type="button"
+          title={`Click × to remove "${text}"`}
         >
           <div
             className="label--delete-x"
