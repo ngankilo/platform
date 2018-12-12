@@ -102,7 +102,6 @@ func (s *Service) FindOrganization(ctx context.Context, filter platform.Organiza
 		return nil, &platform.Error{
 			Op:  op,
 			Err: err,
-			// Msg: "foo bar",
 		}
 	}
 	if n < 1 {
