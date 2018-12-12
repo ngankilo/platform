@@ -102,6 +102,7 @@ func (s *Service) FindOrganization(ctx context.Context, filter platform.Organiza
 		return nil, &platform.Error{
 			Op:  op,
 			Err: err,
+			// Msg: "foo bar",
 		}
 	}
 	if n < 1 {
@@ -149,7 +150,7 @@ func (s *Service) FindOrganizations(ctx context.Context, filter platform.Organiz
 		return orgs, 0, &platform.Error{
 			Code: platform.ENotFound,
 			Op:   op,
-			Msg:  OpPrefix + platform.OpFindOrganizations,
+			Msg:  errOrganizationNotFound,
 		}
 	}
 

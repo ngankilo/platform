@@ -3,6 +3,7 @@ package testing
 import (
 	"bytes"
 	"context"
+	"errors"
 	"sort"
 	"testing"
 
@@ -174,6 +175,7 @@ func CreateOrganization(
 					Code: platform.EConflict,
 					Op:   platform.OpCreateOrganization,
 					Msg:  "organization with name organization1 already exists",
+					Err:  errors.New("foo"),
 				},
 			},
 		},
@@ -295,7 +297,7 @@ func FindOrganizationByID(
 				err: &platform.Error{
 					Code: platform.ENotFound,
 					Op:   platform.OpFindOrganizationByID,
-					Msg:  "",
+					Msg:  "organization not found",
 				},
 			},
 		},
