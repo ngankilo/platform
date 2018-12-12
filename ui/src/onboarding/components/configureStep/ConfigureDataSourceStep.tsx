@@ -14,13 +14,16 @@ import {
 import ConfigureDataSourceSwitcher from 'src/onboarding/components/configureStep/ConfigureDataSourceSwitcher'
 
 // Utils
-import {getConfigFields} from 'src/onboarding/utils/pluginConfigs'
+import {
+  getConfigFields,
+  createNewPlugin,
+} from 'src/onboarding/utils/pluginConfigs'
 
 // Actions
 import {setActiveTelegrafPlugin} from 'src/onboarding/actions/dataLoaders'
 import {
   updateTelegrafPluginConfig,
-  setPluginConfigurationState,
+  setPluginConfiguration,
   addConfigValue,
   removeConfigValue,
   createTelegrafConfigAsync,
@@ -39,14 +42,17 @@ import {
   TelegrafPlugin,
   DataLoaderType,
   ConfigurationState,
+  ConfigFieldType,
+  Plugin,
 } from 'src/types/v2/dataLoaders'
 import {validateURI} from 'src/shared/utils/validateURI'
+import {getDeep} from 'src/utils/wrappers'
 
 export interface OwnProps extends OnboardingStepProps {
   telegrafPlugins: TelegrafPlugin[]
   onSetActiveTelegrafPlugin: typeof setActiveTelegrafPlugin
   onUpdateTelegrafPluginConfig: typeof updateTelegrafPluginConfig
-  onSetPluginConfigurationState: typeof setPluginConfigurationState
+  onSetPluginConfiguration: typeof setPluginConfiguration
   type: DataLoaderType
   onAddConfigValue: typeof addConfigValue
   onRemoveConfigValue: typeof removeConfigValue
@@ -88,7 +94,7 @@ class ConfigureDataSourceStep extends PureComponent<Props> {
       params: {substepID},
       setupParams,
       onUpdateTelegrafPluginConfig,
-      onSetPluginConfigurationState,
+      onSetPluginConfiguration,
       onAddConfigValue,
       onRemoveConfigValue,
     } = this.props
@@ -101,7 +107,7 @@ class ConfigureDataSourceStep extends PureComponent<Props> {
           username={_.get(setupParams, 'username', '')}
           telegrafPlugins={telegrafPlugins}
           onUpdateTelegrafPluginConfig={onUpdateTelegrafPluginConfig}
-          onSetPluginConfigurationState={onSetPluginConfigurationState}
+          onSetPluginConfiguration={onSetPluginConfiguration}
           onAddConfigValue={onAddConfigValue}
           onRemoveConfigValue={onRemoveConfigValue}
           dataLoaderType={type}
@@ -166,10 +172,9 @@ class ConfigureDataSourceStep extends PureComponent<Props> {
 
     const index = +substepID
 
-    await this.setPluginConfiguration()
-
     if (index >= telegrafPlugins.length - 1) {
       if (type === DataLoaderType.Streaming) {
+        await this.setPluginConfiguration() // TODO...
         const unconfigured = this.props.telegrafPlugins.find(tp => {
           return tp.configured === ConfigurationState.Unconfigured
         })
@@ -210,6 +215,7 @@ class ConfigureDataSourceStep extends PureComponent<Props> {
 
     if (index >= 0) {
       const name = _.get(telegrafPlugins, `${index - 1}.name`)
+      this.setPluginConfiguration()
       onSetActiveTelegrafPlugin(name)
     } else {
       onSetActiveTelegrafPlugin('')
@@ -223,7 +229,7 @@ class ConfigureDataSourceStep extends PureComponent<Props> {
       type,
       telegrafPlugins,
       params: {substepID},
-      onSetPluginConfigurationState,
+      onSetPluginConfiguration,
     } = this.props
 
     const index = +substepID
@@ -236,25 +242,42 @@ class ConfigureDataSourceStep extends PureComponent<Props> {
       const configFields = getConfigFields(name)
 
       if (!configFields) {
-        onSetPluginConfigurationState(name, ConfigurationState.Configured)
+        onSetPluginConfiguration(name, ConfigurationState.Configured)
       } else {
-        let invalidConfigField = false
-        const config = _.get(telegrafPlugins, `${index}.plugin.config`, {})
+        let isValidConfig = true
 
-        Object.keys(config).forEach(fieldName => {
+        const plugin = getDeep<Plugin>(
+          telegrafPlugins,
+          `${index}.plugin`,
+          createNewPlugin(name)
+        )
+
+        const {config} = plugin
+
+        Object.entries(configFields).forEach(configField => {
+          const [fieldName, fieldType] = configField
           const fieldValue = config[fieldName]
 
-          if (fieldName === 'url' && !validateURI(fieldValue)) {
-            invalidConfigField = true
-          } else if (fieldValue === '') {
-            invalidConfigField = true
+          const isValidUri =
+            fieldType === ConfigFieldType.Uri &&
+            validateURI(fieldValue as string)
+          const isValidString =
+            fieldType === ConfigFieldType.String &&
+            (fieldValue as string) !== ''
+          const isValidArray =
+            (fieldType === ConfigFieldType.StringArray ||
+              fieldType === ConfigFieldType.UriArray) &&
+            (fieldValue as string[]).length
+
+          if (!isValidUri && !isValidString && !isValidArray) {
+            isValidConfig = false
           }
         })
 
-        if (invalidConfigField) {
-          onSetPluginConfigurationState(name, ConfigurationState.Unconfigured)
+        if (!isValidConfig || _.isEmpty(config)) {
+          onSetPluginConfiguration(name, ConfigurationState.Unconfigured)
         } else {
-          onSetPluginConfigurationState(name, ConfigurationState.Configured)
+          onSetPluginConfiguration(name, ConfigurationState.Configured)
         }
       }
     }

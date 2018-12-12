@@ -151,6 +151,8 @@ export default (state = INITIAL_STATE, action: Action): DataLoadersState => {
       }
     case 'SET_PLUGIN_CONFIGURATION_STATE':
       const configured = action.payload.configured
+      // TODO: move logic to check if action.payload.plugin is configured correctly here
+      // same w/ setStepStatus
       return {
         ...state,
         telegrafPlugins: state.telegrafPlugins.map(tp => {
