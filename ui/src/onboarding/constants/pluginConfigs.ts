@@ -3,6 +3,7 @@ import {
   TelegrafPluginName,
   TelegrafPluginInfo,
   ConfigFieldType,
+  BundleName,
 } from 'src/types/v2/dataLoaders'
 import {
   TelegrafPluginInputCpu,
@@ -26,6 +27,41 @@ import {
   TelegrafPluginInputSystem,
   TelegrafPluginInputTail,
 } from 'src/api'
+
+interface PluginBundles {
+  [bundleName: string]: TelegrafPluginName[]
+}
+
+export const pluginsByBundle: PluginBundles = {
+  [BundleName.System]: [
+    TelegrafPluginInputCpu.NameEnum.Cpu,
+    TelegrafPluginInputDisk.NameEnum.Disk,
+    TelegrafPluginInputDiskio.NameEnum.Diskio,
+    TelegrafPluginInputKernel.NameEnum.Kernel,
+    TelegrafPluginInputMem.NameEnum.Mem,
+    TelegrafPluginInputProcesses.NameEnum.Processes,
+    TelegrafPluginInputSwap.NameEnum.Swap,
+    TelegrafPluginInputSystem.NameEnum.System,
+  ],
+  [BundleName.Disk]: [
+    TelegrafPluginInputDisk.NameEnum.Disk,
+    TelegrafPluginInputDiskio.NameEnum.Diskio,
+  ],
+  [BundleName.Docker]: [TelegrafPluginInputDocker.NameEnum.Docker],
+  [BundleName.File]: [TelegrafPluginInputFile.NameEnum.File],
+  [BundleName.Kubernetes]: [TelegrafPluginInputKubernetes.NameEnum.Kubernetes],
+  [BundleName.Logparser]: [TelegrafPluginInputLogParser.NameEnum.Logparser],
+  [BundleName.Net]: [TelegrafPluginInputNet.NameEnum.Net],
+  [BundleName.NetResponse]: [
+    TelegrafPluginInputNetResponse.NameEnum.NetResponse,
+  ],
+  [BundleName.Ngnix]: [TelegrafPluginInputNgnix.NameEnum.Ngnix],
+  [BundleName.Procstat]: [TelegrafPluginInputProcstat.NameEnum.Procstat],
+  [BundleName.Prometheus]: [TelegrafPluginInputPrometheus.NameEnum.Prometheus],
+  [BundleName.Redis]: [TelegrafPluginInputRedis.NameEnum.Redis],
+  [BundleName.Syslog]: [TelegrafPluginInputSyslog.NameEnum.Syslog],
+  [BundleName.Tail]: [TelegrafPluginInputTail.NameEnum.Tail],
+}
 
 export const telegrafPluginsInfo: TelegrafPluginInfo = {
   [TelegrafPluginInputCpu.NameEnum.Cpu]: {
@@ -214,4 +250,21 @@ export const PLUGIN_OPTIONS: TelegrafPluginName[] = [
   TelegrafPluginInputSwap.NameEnum.Swap,
   TelegrafPluginInputSystem.NameEnum.System,
   TelegrafPluginInputTail.NameEnum.Tail,
+]
+
+export const PLUGIN_BUNDLE_OPTIONS: BundleName[] = [
+  BundleName.System,
+  BundleName.Disk,
+  BundleName.Docker,
+  BundleName.File,
+  BundleName.Kubernetes,
+  BundleName.Logparser,
+  BundleName.Net,
+  BundleName.NetResponse,
+  BundleName.Ngnix,
+  BundleName.Procstat,
+  BundleName.Prometheus,
+  BundleName.Redis,
+  BundleName.Syslog,
+  BundleName.Tail,
 ]

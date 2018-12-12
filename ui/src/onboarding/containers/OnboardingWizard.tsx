@@ -26,6 +26,8 @@ import {
   removeTelegrafPlugin,
   setActiveTelegrafPlugin,
   createTelegrafConfigAsync,
+  addPluginBundleWithPlugins,
+  removePluginBundleWithPlugins,
 } from 'src/onboarding/actions/dataLoaders'
 
 // Constants
@@ -72,6 +74,8 @@ interface DispatchProps {
   onSetStepStatus: typeof setStepStatus
   onSetDataLoadersType: typeof setDataLoadersType
   onAddTelegrafPlugin: typeof addTelegrafPlugin
+  onAddPluginBundle: typeof addPluginBundleWithPlugins
+  onRemovePluginBundle: typeof removePluginBundleWithPlugins
   onUpdateTelegrafPluginConfig: typeof updateTelegrafPluginConfig
   onAddConfigValue: typeof addConfigValue
   onRemoveConfigValue: typeof removeConfigValue
@@ -119,6 +123,8 @@ class OnboardingWizard extends PureComponent<Props> {
       onRemoveConfigValue,
       onRemoveTelegrafPlugin,
       onSaveTelegrafConfig,
+      onAddPluginBundle,
+      onRemovePluginBundle,
       setupParams,
       notify,
       onDecrementCurrentStepIndex,
@@ -152,6 +158,8 @@ class OnboardingWizard extends PureComponent<Props> {
               onAddConfigValue={onAddConfigValue}
               onRemoveConfigValue={onRemoveConfigValue}
               onSaveTelegrafConfig={onSaveTelegrafConfig}
+              onAddPluginBundle={onAddPluginBundle}
+              onRemovePluginBundle={onRemovePluginBundle}
             />
           </div>
         </div>
@@ -283,6 +291,8 @@ const mdtp: DispatchProps = {
   onRemoveTelegrafPlugin: removeTelegrafPlugin,
   onSetActiveTelegrafPlugin: setActiveTelegrafPlugin,
   onSaveTelegrafConfig: createTelegrafConfigAsync,
+  onAddPluginBundle: addPluginBundleWithPlugins,
+  onRemovePluginBundle: removePluginBundleWithPlugins,
 }
 
 export default connect<StateProps, DispatchProps, OwnProps>(

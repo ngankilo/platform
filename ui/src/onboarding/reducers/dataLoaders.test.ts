@@ -11,9 +11,13 @@ import {
   addConfigValue,
   removeConfigValue,
   removeTelegrafPlugin,
+  removePluginBundle,
   setActiveTelegrafPlugin,
   setTelegrafConfigID,
   updateTelegrafPluginConfig,
+  addPluginBundle,
+  addTelegrafPlugins,
+  removeBundlePlugins,
 } from 'src/onboarding/actions/dataLoaders'
 
 // Types
@@ -21,13 +25,20 @@ import {
   TelegrafPluginInputCpu,
   TelegrafPluginInputDisk,
   TelegrafPluginInputRedis,
+  TelegrafPluginInputKernel,
+  TelegrafPluginInputDiskio,
+  TelegrafPluginInputMem,
+  TelegrafPluginInputSwap,
+  TelegrafPluginInputSystem,
+  TelegrafPluginInputProcesses,
 } from 'src/api'
 import {
   DataLoaderType,
   ConfigurationState,
   TelegrafPlugin,
+  BundleName,
 } from 'src/types/v2/dataLoaders'
-import {redisPlugin} from 'mocks/dummyData'
+import {redisPlugin, telegrafPlugin} from 'mocks/dummyData'
 
 describe('dataLoader reducer', () => {
   it('can set a type', () => {
@@ -245,6 +256,113 @@ describe('dataLoader reducer', () => {
           },
         },
       ],
+    }
+    expect(actual).toEqual(expected)
+  })
+
+  it('can add a plugin bundle', () => {
+    const actual = dataLoadersReducer(
+      {...INITIAL_STATE, pluginBundles: [BundleName.Redis]},
+      addPluginBundle(BundleName.System)
+    )
+
+    const expected = {
+      ...INITIAL_STATE,
+      pluginBundles: [BundleName.Redis, BundleName.System],
+    }
+    expect(actual).toEqual(expected)
+  })
+
+  it('can remove a plugin bundle', () => {
+    const actual = dataLoadersReducer(
+      {...INITIAL_STATE, pluginBundles: [BundleName.Redis, BundleName.System]},
+      removePluginBundle(BundleName.Redis)
+    )
+
+    const expected = {
+      ...INITIAL_STATE,
+      pluginBundles: [BundleName.System],
+    }
+    expect(actual).toEqual(expected)
+  })
+
+  it('can add telegraf Plugins', () => {
+    const cpuPlugin = {...telegrafPlugin}
+    const diskPlugin = {
+      ...telegrafPlugin,
+      name: TelegrafPluginInputDisk.NameEnum.Disk,
+    }
+    const redisPlugin = {
+      ...telegrafPlugin,
+      name: TelegrafPluginInputRedis.NameEnum.Redis,
+    }
+
+    const actual = dataLoadersReducer(
+      {...INITIAL_STATE, telegrafPlugins: [redisPlugin, diskPlugin]},
+      addTelegrafPlugins([cpuPlugin, diskPlugin])
+    )
+
+    const expected = {
+      ...INITIAL_STATE,
+      telegrafPlugins: [redisPlugin, diskPlugin, cpuPlugin],
+    }
+
+    expect(actual).toEqual(expected)
+  })
+
+  it('can remove telegraf Plugins', () => {
+    const cpuPlugin = {...telegrafPlugin}
+    const diskPlugin = {
+      ...telegrafPlugin,
+      name: TelegrafPluginInputDisk.NameEnum.Disk,
+    }
+    const diskioPlugin = {
+      ...telegrafPlugin,
+      name: TelegrafPluginInputDiskio.NameEnum.Diskio,
+    }
+    const kernelPlugin = {
+      ...telegrafPlugin,
+      name: TelegrafPluginInputKernel.NameEnum.Kernel,
+    }
+    const memPlugin = {
+      ...telegrafPlugin,
+      name: TelegrafPluginInputMem.NameEnum.Mem,
+    }
+    const processesPlugin = {
+      ...telegrafPlugin,
+      name: TelegrafPluginInputProcesses.NameEnum.Processes,
+    }
+    const swapPlugin = {
+      ...telegrafPlugin,
+      name: TelegrafPluginInputSwap.NameEnum.Swap,
+    }
+    const systemPlugin = {
+      ...telegrafPlugin,
+      name: TelegrafPluginInputSystem.NameEnum.System,
+    }
+
+    const actual = dataLoadersReducer(
+      {
+        ...INITIAL_STATE,
+        pluginBundles: [BundleName.Disk, BundleName.System],
+        telegrafPlugins: [
+          cpuPlugin,
+          diskPlugin,
+          diskioPlugin,
+          kernelPlugin,
+          memPlugin,
+          processesPlugin,
+          swapPlugin,
+          systemPlugin,
+        ],
+      },
+      removeBundlePlugins(BundleName.System)
+    )
+
+    const expected = {
+      ...INITIAL_STATE,
+      pluginBundles: [BundleName.Disk, BundleName.System],
+      telegrafPlugins: [diskPlugin, diskioPlugin],
     }
 
     expect(actual).toEqual(expected)
